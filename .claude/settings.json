@@ -6,7 +6,8 @@
       "PowerShell(git push -u origin main)",
       "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m pytest -q tests/test_features.py)",
       "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m ml.backtest --model all)",
-      "PowerShell(git push)"
+      "PowerShell(git push)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m agents.run --task sentiment --dry-run --limit 5)"
     ]
   }
 }
