@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -c \"from data_pipeline.news.gdelt import GDELTProvider; p = GDELTProvider\\(\\); [print\\(t, '->', len\\(p.fetch_for_ticker\\(t\\)\\), 'items'\\) for t in ['AAPL', 'MSFT', 'NVDA']]\")",
-      "PowerShell(git add -A)"
+      "PowerShell(git add -A)",
+      "PowerShell(git push -u origin main)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m pytest -q tests/test_features.py)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m ml.backtest --model all)",
+      "PowerShell(git push)"
     ]
   }
 }

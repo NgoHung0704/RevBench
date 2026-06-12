@@ -18,6 +18,8 @@ dependencies = [
     "feedparser>=6.0",
     "apscheduler>=3.10,<4",
     "requests>=2.31",
+    "lightgbm>=4.0",
+    "scikit-learn>=1.4",
 ]
 
 [project.optional-dependencies]

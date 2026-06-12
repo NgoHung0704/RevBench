@@ -50,4 +50,8 @@ Copy `.env.example` to `.env` and fill in keys as phases require them (Anthropic
 
 ✅ **Phase 1 — Data foundation, done (2026-06-12).** Prices (5y × 15 tickers, validated), news (Yahoo per-ticker RSS + GDELT broad coverage), fundamentals (SEC EDGAR XBRL with point-in-time `available_at = filed + 1 day`), data-quality checks, `daily_update` job + APScheduler (22:30 Europe/Paris). Known limitation: GDELT's free API rate-limits per IP aggressively — the job fails fast on 429 and self-heals via overlapping 3-day windows on the next run.
 
-🔜 **Phase 2 — Baselines + walk-forward backtesting engine** (next; the scientifically critical phase).
+✅ **Phase 2 — Backtesting engine + baselines, done (2026-06-12).** Walk-forward harness (expanding window, embargo = horizon+1 purging label overlap, 10 bps/side costs, skip-a-day execution), metrics module, 17 causal technical features, baselines (always-up, 12-1 momentum) + LightGBM v1. Run: `python -m ml.backtest --model all`.
+
+First honest OOS result (491 days, 2024-06 → 2026-06): **nothing beats equal-weight buy & hold in this bull window** — B&H Sharpe 1.17; LightGBM v1 Sharpe 0.45 with 51.1% accuracy vs a 53.9% up-move base rate. Expected per EMH; the harness is the deliverable. Whether agent signals add alpha is exactly Phase 3–4's research question.
+
+🔜 **Phase 3 — Agent system MVP** (needs `ANTHROPIC_API_KEY` in `.env`).
