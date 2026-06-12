@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "revbench"
+version = "0.1.0"
+description = "AI decision-support system for blue-chip stocks on Revolut (INSA Lyon 4IF research project)"
+requires-python = ">=3.11"
+dependencies = [
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "duckdb>=1.0",
+    "pydantic>=2.7",
+    "pydantic-settings>=2.2",
+    "yfinance>=0.2.50",
+    "tenacity>=8.2",
+    "feedparser>=6.0",
+    "apscheduler>=3.10,<4",
+    "requests>=2.31",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.4",
+]
+
+[tool.setuptools.packages.find]
+include = ["data_pipeline*", "ml*", "agents*"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+
+[tool.pytest.ini_options]
+addopts = "-q -m 'not integration'"
+markers = [
+    "integration: tests that hit real external services (network) — run with: pytest -m integration",
+]
+testpaths = ["tests"]

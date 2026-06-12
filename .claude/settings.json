@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -c \"from data_pipeline.news.gdelt import GDELTProvider; p = GDELTProvider\\(\\); [print\\(t, '->', len\\(p.fetch_for_ticker\\(t\\)\\), 'items'\\) for t in ['AAPL', 'MSFT', 'NVDA']]\")",
+      "PowerShell(git add -A)"
+    ]
+  }
+}

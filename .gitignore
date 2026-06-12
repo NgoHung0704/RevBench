@@ -1,0 +1,47 @@
+# --- Secrets ---
+.env
+.env.local
+*.pem
+credentials*.json
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# --- Node / frontend ---
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+
+# --- Data (never commit raw data) ---
+data/raw/
+data/processed/
+data/cache/
+*.parquet
+*.duckdb
+*.sqlite
+*.csv
+!**/fixtures/**/*.csv
+
+# --- Notebooks ---
+.ipynb_checkpoints/
+
+# --- ML artifacts ---
+models/artifacts/
+mlruns/
+wandb/
+
+# --- OS / IDE ---
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
