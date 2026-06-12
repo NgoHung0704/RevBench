@@ -53,28 +53,29 @@
 
 ---
 
-## D3 — LLM & chiến lược chi phí 🟡
+## D3 — LLM & chiến lược chi phí
 
-**Bối cảnh:** agent system là trái tim dự án. Đã tra cứu Claude API (06/2026):
+**Lịch sử:** chốt lần 1 (2026-06-12): Claude API — Opus 4.8 reasoning + Haiku 4.5 Batch, ước tính $3–6/ngày. **Bạn mở lại cùng ngày** vì ưu tiên chi phí → chuyển **DeepSeek V4** (ra mắt 24/04/2026; giá & tính năng xác minh qua web 12/06/2026).
 
-| Model | Input $/1M tok | Output $/1M tok | Vai trò đề xuất |
+| Model | Input $/1M | Output $/1M | Vai trò |
 |---|---|---|---|
-| `claude-opus-4-8` | $5 | $25 | Orchestrator, Fundamentals, Strategist, Risk — việc cần suy luận sâu |
-| `claude-haiku-4-5` | $1 | $5 | Sentiment scoring khối lượng lớn (hàng trăm bài/ngày) |
+| `deepseek-v4-pro` | $0.435 (cache hit ~$0.004) | $0.87 | News, Fundamentals, Technical, Risk, Strategist |
+| `deepseek-v4-flash` | $0.14 (cache hit ~$0.003) | $0.28 | Bulk sentiment (hàng trăm bài/đêm) |
 
-Đòn bẩy chi phí có sẵn trên API:
-- **Batch API**: −50% mọi token, hoàn hảo cho sentiment hằng đêm (không cần realtime).
-- **Prompt caching**: system prompt + tool list dùng chung → đọc cache ~0.1× giá.
-- **Server-side web search tool** (`web_search_20260209`): News Agent tìm web không cần tự dựng crawler.
-- **Structured outputs**: bắt JSON đúng schema Pydantic, không phải parse text.
+So với Claude: input rẻ ~11×, output ~29×. Ước tính mới: **~$0.15–0.30/ngày ≈ $3–6/tháng** (cũ: $60–130/tháng).
 
-Ước lượng thô: 15 ticker × (1 orchestrator run ~30K tok in / 5K out trên Opus + 50 bài sentiment trên Haiku batch) ≈ **$3–6/ngày** chạy daily. Chấp nhận được nếu chỉ chạy ngày giao dịch (~21 ngày/tháng → $60–130/tháng; có thể giảm tiếp bằng cách chạy 3 lần/tuần khi dev).
+Đòn bẩy chi phí phía DeepSeek:
+- **Off-peak −50%** trong 16:30–00:30 UTC — job 22:30 Paris (= 20:30/21:30 UTC) nằm gọn trong cửa sổ; thay thế vai trò Batch API của Anthropic.
+- **Prefix caching tự động** (cache hit rẻ ~97–99%) — quy tắc "system prompt đóng băng" giữ nguyên.
+- **OpenAI-compatible API**: `openai` SDK + `base_url=https://api.deepseek.com` — không SDK riêng.
+- JSON mode + function calling: structured outputs qua Pydantic validation + retry khi parse fail.
 
-**Phương án khác đã cân nhắc:** OpenAI/Gemini (khả thi tương đương, nhưng tôi viết & debug hệ Claude tốt nhất, và skill/tooling sẵn có trong repo này hướng Claude); local LLM qua Ollama (miễn phí nhưng chất lượng suy luận tài chính kém hơn rõ, thêm độ phức tạp vận hành).
+Đánh đổi chấp nhận (ghi vào báo cáo đồ án):
+1. **Suy luận dưới Opus 4.8** — đo được ở Phase 4 ablation; model ID là config (xem D4) nên đổi/nâng cấp từng agent rất rẻ.
+2. **Mất server-side web search** của Anthropic → News Agent chỉ đọc DB nội bộ (RSS + GDELT — đã có từ Phase 1; giảm phụ thuộc ngoài).
+3. **Dữ liệu qua server DeepSeek (Trung Quốc)** — chỉ gửi dữ liệu công khai (giá, tin tức), không PII; chấp nhận được cho đồ án nghiên cứu.
 
-**Đề xuất:** Claude API; Opus 4.8 cho reasoning, Haiku 4.5 + Batch cho bulk sentiment; ngân sách trần cứng trong code (ví dụ $5/ngày).
-
-**Trạng thái:** ✅ Chốt 2026-06-12 — Claude API: Opus 4.8 (reasoning), Haiku 4.5 + Batch API (bulk sentiment); trần cứng `AGENT_DAILY_BUDGET_USD=5`.
+**Trạng thái:** ✅ Chốt lại 2026-06-12 (quyết định của bạn) — DeepSeek V4: `deepseek-v4-pro` reasoning + `deepseek-v4-flash` sentiment, chạy trong cửa sổ off-peak; trần ngân sách hạ còn `AGENT_DAILY_BUDGET_USD=1`.
 
 ---
 

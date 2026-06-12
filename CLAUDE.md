@@ -16,5 +16,5 @@ AI decision-support system for blue-chip stocks on Revolut. Student research pro
 
 ## Conventions
 - Python 3.11+, `ruff` + `pytest`; code/comments/identifiers in English; planning docs in Vietnamese (user's working language).
-- Claude API: `claude-opus-4-8` for reasoning agents, `claude-haiku-4-5` + Batch API for bulk sentiment; prompt caching with frozen system prompts (no timestamps in system prompts).
+- LLM: DeepSeek V4 via the OpenAI-compatible SDK (`deepseek-v4-pro` reasoning agents, `deepseek-v4-flash` bulk sentiment) — D3 re-decided 2026-06-12 for cost. JSON mode + Pydantic validation; scheduler runs inside the off-peak window (16:30–00:30 UTC, −50%); frozen system prompts (no timestamps) to maximize automatic prefix caching. Per-agent model IDs are config, not code.
 - Provider adapters behind interfaces (`PriceProvider`, `NewsProvider`) — free data sources break; swap adapters, not logic.

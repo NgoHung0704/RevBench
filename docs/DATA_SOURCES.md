@@ -21,7 +21,7 @@
 | NewsAPI.org | Free tier | 100 req/ngày, delay 24h ở free | 🟡 phụ |
 | Finnhub company news | Free tier | Gắn ticker sẵn — đỡ công entity linking | ✅ nếu dùng Finnhub |
 | Bloomberg/Reuters API | $$$$ | | ❌ ngân sách |
-| **Claude server-side web search** | ~$10/1K searches + tokens | News Agent tự tìm khi cần đào sâu — không cần crawler | ✅ có kiểm soát `max_uses` |
+| Claude server-side web search | ~$10/1K searches + tokens | News Agent tự tìm khi cần đào sâu | ❌ bỏ khi chuyển DeepSeek (D3) — News Agent đọc DB nội bộ (RSS + GDELT) |
 
 ## 3. Fundamentals (Phase 1, 3)
 
