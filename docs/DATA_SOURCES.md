@@ -1,60 +1,60 @@
-# RevBench — Catalog nguồn dữ liệu
+# RevBench — Data-Source Catalog
 
-> Đánh giá theo 4 tiêu chí: phí, độ tin cậy, pháp lý (ToS), giá trị dự đoán kỳ vọng. Trạng thái: ✅ dùng, 🟡 cân nhắc, ❌ loại (ghi lý do để khỏi bàn lại).
+> Evaluated on 4 criteria: cost, reliability, legality (ToS), expected predictive value. Status: ✅ in use, 🟡 under consideration, ❌ rejected (reason noted so we don't relitigate).
 
-## 1. Giá & khối lượng (Phase 1)
+## 1. Prices & volume (Phase 1)
 
-| Nguồn | Phí | Ghi chú | Trạng thái |
+| Source | Cost | Notes | Status |
 |---|---|---|---|
-| yfinance (Yahoo) | Free | Không chính thức, hay vỡ; lịch sử dài, có adjusted close | ✅ nguồn chính dev `[D1]` |
-| Tiingo | Free tier | Chính thức, lịch sử dài, 50 symbols/h | 🟡 nguồn dự phòng |
-| Finnhub | Free tier | 60 calls/min, kèm news + fundamentals + earnings calendar | 🟡 đa dụng |
-| Alpha Vantage | Free | 25 req/ngày — quá chật | ❌ |
-| Polygon.io free | Free | Chỉ 2 năm lịch sử, 5 calls/min | ❌ cho nhu cầu này |
+| yfinance (Yahoo) | Free | Unofficial, breaks often; long history, has adjusted close | ✅ primary dev source `[D1]` |
+| Tiingo | Free tier | Official, long history, 50 symbols/h | 🟡 backup source |
+| Finnhub | Free tier | 60 calls/min, includes news + fundamentals + earnings calendar | 🟡 versatile |
+| Alpha Vantage | Free | 25 req/day — too tight | ❌ |
+| Polygon.io free | Free | Only 2 years of history, 5 calls/min | ❌ for this need |
 
-## 2. Tin tức (Phase 1, 3)
+## 2. News (Phase 1, 3)
 
-| Nguồn | Phí | Ghi chú | Trạng thái |
+| Source | Cost | Notes | Status |
 |---|---|---|---|
-| RSS feeds (CNBC, Reuters, Yahoo Finance, MarketWatch, SeekingAlpha) | Free | Ổn định, hợp pháp, realtime tốt | ✅ |
-| GDELT 2.0 | Free | Độ phủ khổng lồ, query bằng BigQuery/API; nhiễu cao cần lọc | ✅ |
-| NewsAPI.org | Free tier | 100 req/ngày, delay 24h ở free | 🟡 phụ |
-| Finnhub company news | Free tier | Gắn ticker sẵn — đỡ công entity linking | ✅ nếu dùng Finnhub |
-| Bloomberg/Reuters API | $$$$ | | ❌ ngân sách |
-| Claude server-side web search | ~$10/1K searches + tokens | News Agent tự tìm khi cần đào sâu | ❌ bỏ khi chuyển DeepSeek (D3) — News Agent đọc DB nội bộ (RSS + GDELT) |
+| RSS feeds (CNBC, Reuters, Yahoo Finance, MarketWatch, SeekingAlpha) | Free | Stable, legal, good real-time coverage | ✅ |
+| GDELT 2.0 | Free | Huge coverage, queried via API; noisy, needs filtering | ✅ |
+| NewsAPI.org | Free tier | 100 req/day, 24h delay on free | 🟡 secondary |
+| Finnhub company news | Free tier | Ticker-tagged already — saves entity-linking work | ✅ if using Finnhub |
+| Bloomberg/Reuters API | $$$$ | | ❌ budget |
+| Server-side LLM web search | ~$10/1K searches + tokens | Dropped when moving to DeepSeek (D3) — the News Agent reads the internal store (RSS + GDELT) | ❌ |
 
 ## 3. Fundamentals (Phase 1, 3)
 
-| Nguồn | Phí | Ghi chú | Trạng thái |
+| Source | Cost | Notes | Status |
 |---|---|---|---|
-| SEC EDGAR (API chính chủ) | Free | 10-K/10-Q/8-K full text + XBRL số liệu chuẩn; rate limit 10 req/s | ✅ nguồn vàng |
-| yfinance fundamentals | Free | Tiện nhưng số liệu đôi khi lệch | 🟡 tham khảo nhanh |
-| Financial Modeling Prep | Free tier hẹp | | 🟡 |
+| SEC EDGAR (official API) | Free | 10-K/10-Q/8-K full text + XBRL standardized figures; 10 req/s rate limit | ✅ the gold source |
+| yfinance fundamentals | Free | Convenient but figures sometimes off | 🟡 quick reference |
+| Financial Modeling Prep | Narrow free tier | | 🟡 |
 
 ## 4. Social sentiment (Phase 5) `[D7]`
 
-| Nguồn | Phí | Ghi chú | Trạng thái |
+| Source | Cost | Notes | Status |
 |---|---|---|---|
-| Reddit API (PRAW) | Free tier | r/stocks, r/wallstreetbets, r/investing; 100 QPM đủ | ✅ |
-| StockTwits public API | Free | Message có cashtag + sentiment label người dùng tự gắn | ✅ |
-| X (Twitter) API | $100+/tháng cho read | "Grok đọc Twitter" — ngoài ngân sách | ❌ ngân sách (ghi vào báo cáo là limitation) |
-| Facebook/Meta data | Không có API công khai phù hợp | | ❌ |
+| Reddit API (PRAW) | Free tier | r/stocks, r/wallstreetbets, r/investing; 100 QPM is enough | ✅ |
+| StockTwits public API | Free | Messages with cashtags + user-tagged sentiment | ✅ |
+| X (Twitter) API | $100+/month for read | "Grok reads Twitter" — out of budget | ❌ budget (noted as a limitation in the report) |
+| Facebook/Meta data | No suitable public API | | ❌ |
 
 ## 5. Alternative data (Phase 5) `[D8]`
 
-| Nguồn | Phí | Proxy cho | Trạng thái |
+| Source | Cost | Proxy for | Status |
 |---|---|---|---|
-| Google Trends (pytrends) | Free | Nhu cầu tiêu dùng theo brand/sản phẩm | ✅ |
-| Wikipedia pageviews API | Free | Investor attention (có literature hỗ trợ) | ✅ |
-| App store charts | Free (public) | Traction app consumer (META, GOOGL, …) | 🟡 |
-| Job postings (career pages) | Free nhưng phải scrape | Tăng trưởng headcount | 🟡 effort cao |
-| Google Maps Popular Times | Không có API; scrape vi phạm ToS | Foot traffic | ❌ pháp lý |
-| Ảnh vệ tinh thương mại (RS Metrics, Orbital Insight) | $$$$$ | Foot traffic, hàng tồn | ❌ ngân sách |
-| ESA Sentinel-2 (miễn phí, 10m/pixel) | Free | Hoạt động cảng/nhà máy quy mô lớn | 🟡 stretch goal "wow factor" |
+| Google Trends (pytrends) | Free | Consumer demand by brand/product | ✅ |
+| Wikipedia pageviews API | Free | Investor attention (literature-backed) | ✅ |
+| App-store charts | Free (public) | Traction of consumer apps (META, GOOGL, …) | 🟡 |
+| Job postings (career pages) | Free but must scrape | Headcount growth | 🟡 high effort |
+| Google Maps Popular Times | No API; scraping violates ToS | Foot traffic | ❌ legal |
+| Commercial satellite imagery (RS Metrics, Orbital Insight) | $$$$$ | Foot traffic, inventory | ❌ budget |
+| ESA Sentinel-2 (free, 10m/pixel) | Free | Large-scale port/factory activity | 🟡 stretch goal "wow factor" |
 
-## Quy tắc chung
+## General rules
 
-1. **Mọi bản ghi lưu kèm `available_at`** (thời điểm ta *có thể* đã biết thông tin) — không phải `published_at` — để backtest point-in-time đúng.
-2. **Tôn trọng ToS & rate limit** — User-Agent tử tế với EDGAR, exponential backoff mọi nơi.
-3. **Adapter pattern**: mỗi nguồn một class sau interface chung; nguồn chết thì thay adapter.
-4. **Raw data không commit vào git** (đã có trong `.gitignore`) — script tải lại được từ đầu là một deliverable.
+1. **Every record is stored with `available_at`** (the moment we *could* have known the information) — not `published_at` — so point-in-time backtests are correct.
+2. **Respect ToS & rate limits** — a polite User-Agent for EDGAR, exponential backoff everywhere.
+3. **Adapter pattern**: one class per source behind a shared interface; when a source dies, swap the adapter.
+4. **Raw data is never committed to git** (already in `.gitignore`) — a script that re-downloads from scratch is itself a deliverable.

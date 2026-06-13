@@ -15,6 +15,6 @@ AI decision-support system for blue-chip stocks on Revolut. Student research pro
 5. Raw data is never committed (see `.gitignore`).
 
 ## Conventions
-- Python 3.11+, `ruff` + `pytest`; code/comments/identifiers in English; planning docs in Vietnamese (user's working language).
+- Python 3.11+, `ruff` + `pytest`; all written artifacts in English — code, comments, identifiers, `docs/`, and the final report (D12, 2026-06-13). The user converses in Vietnamese in chat; only files are English.
 - LLM: DeepSeek V4 via the OpenAI-compatible SDK (`deepseek-v4-pro` reasoning agents, `deepseek-v4-flash` bulk sentiment) — D3 re-decided 2026-06-12 for cost. JSON mode + Pydantic validation; scheduler runs inside the off-peak window (16:30–00:30 UTC, −50%); frozen system prompts (no timestamps) to maximize automatic prefix caching. Per-agent model IDs are config, not code.
 - Provider adapters behind interfaces (`PriceProvider`, `NewsProvider`) — free data sources break; swap adapters, not logic.

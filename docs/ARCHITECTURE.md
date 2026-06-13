@@ -1,16 +1,16 @@
-# RevBench — Kiến trúc hệ thống
+# RevBench — System Architecture
 
-## Sơ đồ tổng thể
+## Overview diagram
 
 ```
                         ┌────────────────────────────────────────────┐
-   NGUỒN DỮ LIỆU        │              DATA PIPELINE                 │
+   DATA SOURCES         │              DATA PIPELINE                 │
                         │            (data_pipeline/)                │
  Prices (yfinance/…) ──▶│  ingestion ──▶ validation ──▶ storage      │
- News (RSS/GDELT)    ──▶│       mọi bản ghi có `available_at`        │
+ News (RSS/GDELT)    ──▶│       every record carries `available_at`  │
  Fundamentals (EDGAR)──▶│                                            │
  Alt-data (Trends,   ──▶│   Storage: DuckDB/Parquet (research)       │
-  Reddit, StockTwits)   │            PostgreSQL (serving, từ P6)     │
+  Reddit, StockTwits)   │            PostgreSQL (serving, from P6)   │
                         └──────────────┬─────────────────────────────┘
                                        │
                 ┌──────────────────────┼──────────────────────┐
@@ -19,9 +19,9 @@
    │      ML LAYER       │  │    AGENT LAYER      │           │
    │       (ml/)         │  │     (agents/)       │           │
    │ features ─▶ LightGBM│  │ Orchestrator        │           │
-   │ walk-forward        │  │  ├─ News Agent      │◀─ Claude API
-   │ backtest engine     │  │  ├─ Sentiment Agent │   (tool use, web search,
-   │                     │  │  ├─ Technical Agent │    batch, caching)
+   │ walk-forward        │  │  ├─ News Agent      │◀─ DeepSeek V4
+   │ backtest engine     │  │  ├─ Sentiment Agent │   (JSON mode, off-peak,
+   │                     │  │  ├─ Technical Agent │    prefix caching)
    │  ml_signal(t,d)     │  │  ├─ Fundamentals Ag.│           │
    └─────────┬───────────┘  │  ├─ AltData Agent   │           │
              │              │  ├─ Risk Agent      │           │
@@ -36,11 +36,11 @@
    │  Recommendation{action, confidence,          │           │
    │     horizon, rationale, risk}                │           │
    └─────────────────────┬────────────────────────┘           │
-                         │  ghi vào DB                        │
+                         │  write to DB                       │
                          ▼                                    │
    ┌──────────────────────────────────────────────┐           │
    │         BACKEND API (backend/, FastAPI)      │           │
-   │  REST + SSE  — chỉ ĐỌC kết quả tính sẵn      │           │
+   │  REST + SSE  — only READS precomputed results│           │
    └─────────────────────┬────────────────────────┘           │
                          ▼                                    │
    ┌──────────────────────────────────────────────┐           │
@@ -49,54 +49,55 @@
    │  Strategy + disclaimer                       │           │
    └──────────────────────────────────────────────┘           │
                                                               │
-   SCHEDULER (APScheduler): daily 22:30 CET ──────────────────┘
+   SCHEDULER (APScheduler): daily 22:30 Europe/Paris ─────────┘
    pipeline ▶ ml predict ▶ agents ▶ fusion ▶ notify
 ```
 
-## Nguyên tắc kiến trúc
+## Architectural principles
 
-1. **Batch-first.** Mọi thứ đắt (LLM, ML inference) chạy theo lịch sau giờ đóng cửa thị trường Mỹ. Web app chỉ đọc kết quả — phản hồi tức thì, chi phí dự đoán được, không bao giờ gọi LLM theo request người dùng.
-2. **Point-in-time correctness.** Mọi bảng có cột `available_at`. Backtest chỉ được nhìn dữ liệu có `available_at <= t`. Đây là phòng tuyến chống lookahead bias — vi phạm là kết quả nghiên cứu vô nghĩa.
-3. **Agents diễn giải, code tính toán.** LLM không bao giờ tự tính RSI hay trung bình — số liệu do `ml/features` tính, agent nhận số và *diễn giải/suy luận*. LLM giỏi ngôn ngữ & tổng hợp, kém số học.
-4. **Mọi signal đều được lưu lịch sử** (kể cả agent output) → agent signals backtest được như feature thường, trả lời được câu hỏi "agents có thêm alpha không?".
-5. **Provider abstraction.** `PriceProvider`, `NewsProvider` là interface — nguồn miễn phí chết thì thay adapter, không chạm logic.
+1. **Batch-first.** Everything expensive (LLM, ML inference) runs on a schedule after the US market close. The web app only reads results — instant response, predictable cost, never an LLM call on a user request.
+2. **Point-in-time correctness.** Every table has an `available_at` column. Backtests may only read data with `available_at <= t`. This is the front line against lookahead bias — violating it makes the research result meaningless.
+3. **Agents interpret, code computes.** The LLM never computes an RSI or an average — `ml/features` computes the numbers and the agent receives them to *interpret/reason about*. LLMs are great at language & synthesis, weak at arithmetic.
+4. **Every signal is stored with history** (agent outputs included) → agent signals are backtestable like any other feature, which answers "do agents add alpha?".
+5. **Provider abstraction.** `PriceProvider`, `NewsProvider` are interfaces — when a free source dies, swap the adapter, don't touch the logic.
 
-## Cấu trúc thư mục (mục tiêu)
+## Directory layout (target)
 
 ```
 RevBench/
 ├── data_pipeline/          # ingestion + validation + storage adapters
 │   ├── providers/          #   yfinance_provider.py, finnhub_provider.py, ...
 │   ├── news/               #   rss.py, gdelt.py, reddit.py, stocktwits.py
+│   ├── fundamentals/       #   edgar.py
 │   ├── store.py            #   DuckDB/Postgres adapters
-│   └── jobs.py             #   các job cho scheduler
+│   └── jobs.py             #   jobs for the scheduler
 ├── ml/
 │   ├── features/           #   technical, calendar, news-derived features
 │   ├── models/             #   lgbm.py, baselines.py, (lstm.py)
 │   ├── backtest/           #   walk-forward harness, metrics.py
-│   └── fusion/             #   ensemble ML + agent signals
+│   └── fusion/             #   ensemble of ML + agent signals
 ├── agents/
 │   ├── orchestrator.py     #   fan-out/gather, cost guard
 │   ├── roster/             #   news.py, sentiment.py, technical.py, ...
-│   ├── schemas.py          #   Pydantic schemas cho structured outputs
+│   ├── schemas.py          #   Pydantic schemas for structured outputs
 │   └── prompts/            #   system prompts (version-controlled)
 ├── backend/
 │   └── app/                #   FastAPI: routers, services, db
 ├── frontend/               #   Next.js app
-├── notebooks/              #   nghiên cứu, EDA — không import vào production code
+├── notebooks/              #   research, EDA — never imported by production code
 ├── tests/
-└── docs/                   #   tài liệu này
+└── docs/                   #   this documentation
 ```
 
-## Luồng daily (khi hoàn chỉnh)
+## Daily flow (when complete)
 
 ```
-22:30 CET  Scheduler tick (sau khi NYSE đóng 22:00 CET)
-  1. data_pipeline: tải giá EOD, tin trong ngày, alt-data        (~5 phút)
-  2. ml: tính features, predict xác suất tăng 5 ngày             (~1 phút)
-  3. agents: Batch API chấm sentiment toàn bộ tin mới            (~30–60 phút, async)
-  4. agents: orchestrator chạy phân tích sâu từng ticker         (song song, ~10 phút)
-  5. fusion: trộn signals → Recommendation, ghi DB
-  6. backend: bắn SSE "data mới"; frontend tự refresh
-  7. cost report: log token + $ của ngày, so với trần ngân sách
+22:30 Europe/Paris  Scheduler tick (after NYSE closes 22:00 Paris)
+  1. data_pipeline: fetch EOD prices, the day's news, alt-data       (~5 min)
+  2. ml: compute features, predict P(up over 5 days)                 (~1 min)
+  3. agents: score sentiment on all new articles in the off-peak window (~30–60 min, async)
+  4. agents: orchestrator runs the deep per-ticker analysis          (parallel, ~10 min)
+  5. fusion: blend signals → Recommendation, write to DB
+  6. backend: emit "new data" SSE; the frontend refreshes itself
+  7. cost report: log the day's token + $ usage vs the budget ceiling
 ```

@@ -1,64 +1,64 @@
-# RevBench — Lộ trình kiến thức tài chính (Finance Primer)
+# RevBench — Finance Knowledge Roadmap (Finance Primer)
 
-> Dự án này đứng trên 3 chân: AI Engineering, Data Science, **và Finance**. Chân thứ ba yếu thì hai chân kia xây ra thứ vô dụng (hoặc tệ hơn: thứ *trông* có lãi trên backtest sai). File này là lộ trình học + checklist chống bẫy.
+> This project stands on three legs: AI Engineering, Data Science, **and Finance**. A weak third leg makes the other two build something useless (or worse: something that *looks* profitable on a flawed backtest). This file is the learning roadmap + an anti-trap checklist.
 
-## Khối 1 — Bắt buộc trước Phase 2 (backtest)
+## Block 1 — Required before Phase 2 (backtesting)
 
-### 1.1 Efficient Market Hypothesis (EMH) & vì sao bài toán này khó
-- Giá đã phản ánh thông tin công khai → alpha từ dữ liệu công khai là *cực mỏng*.
-- Hệ quả thiết kế: kỳ vọng directional accuracy 52–55% là mục tiêu *thực tế tốt*; ai hứa 80% là đang ăn lookahead bias.
-- Random walk & vì sao "naive forecast" là baseline phải thắng.
+### 1.1 The Efficient Market Hypothesis (EMH) & why this problem is hard
+- Prices already reflect public information → alpha from public data is *extremely thin*.
+- Design implication: a directional accuracy of 52–55% is a *realistically good* target; anyone promising 80% is eating lookahead bias.
+- Random walk & why "naive forecast" is the baseline you must beat.
 
-### 1.2 Returns — làm việc với returns, không phải giá
-- Simple vs log returns; vì sao model dự trên returns chứ không phải price level (non-stationarity).
-- Adjusted price (split/dividend) — dùng sai là feature nhiễm rác.
-- Phân phối returns: fat tails, volatility clustering → đừng giả định Gaussian.
+### 1.2 Returns — work with returns, not prices
+- Simple vs log returns; why models predict on returns rather than the price level (non-stationarity).
+- Adjusted prices (split/dividend) — using the wrong one poisons features with garbage.
+- The distribution of returns: fat tails, volatility clustering → don't assume Gaussian.
 
-### 1.3 Bộ tứ bias chết người (checklist review mọi PR backtest)
-| Bias | Nghĩa | Phòng chống trong RevBench |
+### 1.3 The four deadly biases (review checklist for every backtest PR)
+| Bias | Meaning | Defense in RevBench |
 |---|---|---|
-| **Lookahead** | Dùng thông tin chưa tồn tại tại t | Cột `available_at`; features chỉ từ dữ liệu ≤ t |
-| **Survivorship** | Universe chỉ gồm kẻ sống sót hôm nay | Chấp nhận với blue-chips, *ghi rõ limitation* trong báo cáo |
-| **Overfitting / data snooping** | Thử 100 ý tưởng, báo cáo cái đẹp nhất | Walk-forward; tập test cuối chỉ chạm 1 lần; ghi log mọi thí nghiệm |
-| **Transaction cost ignorance** | Lãi trên giấy, lỗ ngoài đời | Mô phỏng phí + slippage trong mọi backtest |
+| **Lookahead** | Using information that didn't exist at time t | The `available_at` column; features only from data ≤ t |
+| **Survivorship** | The universe is only today's survivors | Accept it for blue-chips, *state the limitation* in the report |
+| **Overfitting / data snooping** | Try 100 ideas, report the prettiest | Walk-forward; the final test set is touched once; log every experiment |
+| **Transaction-cost ignorance** | Profit on paper, loss in real life | Simulate costs + slippage in every backtest |
 
-### 1.4 Metrics đánh giá
-- Sharpe ratio (và vì sao Sharpe > 2 từ dữ liệu daily công khai là đáng nghi ngờ).
+### 1.4 Evaluation metrics
+- Sharpe ratio (and why a Sharpe > 2 from public daily data should be treated with suspicion).
 - Sortino, max drawdown, hit rate, profit factor, turnover.
-- Information Coefficient (IC) — đo chất lượng *signal* tách khỏi chiến lược.
+- Information Coefficient (IC) — measures *signal* quality separately from the strategy.
 
-## Khối 2 — Trước Phase 3–4 (agents & fusion)
+## Block 2 — Before Phase 3–4 (agents & fusion)
 
-### 2.1 Phân tích cơ bản (cho Fundamentals Agent)
-- Đọc 10-K/10-Q: income statement, balance sheet, cash flow — chỉ cần mức "biết tìm gì ở đâu".
-- Chỉ số: P/E, forward P/E, PEG, EV/EBITDA, gross/operating margin, FCF yield.
-- Earnings season: expectations game — giá chạy theo *bất ngờ* (surprise vs consensus), không theo số tuyệt đối.
+### 2.1 Fundamental analysis (for the Fundamentals Agent)
+- Reading a 10-K/10-Q: income statement, balance sheet, cash flow — only the "know where to look" level.
+- Ratios: P/E, forward P/E, PEG, EV/EBITDA, gross/operating margin, FCF yield.
+- Earnings season: the expectations game — prices move on the *surprise* (vs consensus), not the absolute number.
 
-### 2.2 Phân tích kỹ thuật (cho Technical Agent)
-- Momentum (hiện tượng có bằng chứng học thuật mạnh nhất), mean reversion.
-- RSI, MACD, Bollinger, moving averages, support/resistance, volume profile — hiểu cơ chế, không thờ phụng.
-- Volatility regimes (vol thấp/cao thay đổi hành vi mọi signal).
+### 2.2 Technical analysis (for the Technical Agent)
+- Momentum (the most academically supported phenomenon), mean reversion.
+- RSI, MACD, Bollinger, moving averages, support/resistance, volume profile — understand the mechanism, don't worship it.
+- Volatility regimes (low/high vol changes the behavior of every signal).
 
-### 2.3 Tin tức & sentiment
-- Event study: giá phản ứng tin trong phút-giờ → tin *hôm qua* chủ yếu dự đoán... volatility, không phải hướng. Đặt kỳ vọng đúng cho Sentiment Agent.
-- Loại sự kiện trọng yếu: earnings, guidance, M&A, kiện tụng, thay CEO, nâng/hạ rating, sản phẩm mới, macro (Fed, CPI).
+### 2.3 News & sentiment
+- Event studies: prices react to news within minutes-to-hours → *yesterday's* news mostly predicts... volatility, not direction. Set the right expectation for the Sentiment Agent.
+- Material event types: earnings, guidance, M&A, litigation, CEO change, rating up/downgrade, new product, macro (Fed, CPI).
 
-### 2.4 Risk & position sizing (cho Risk Agent)
-- Volatility targeting, fractional Kelly (và vì sao full Kelly là tự sát).
-- Correlation trong danh mục — 15 mã tech ≠ đa dạng hóa.
-- Stop loss: tranh cãi học thuật, nhưng UX cần nó.
+### 2.4 Risk & position sizing (for the Risk Agent)
+- Volatility targeting, fractional Kelly (and why full Kelly is suicidal).
+- Correlation within a portfolio — 15 tech stocks ≠ diversification.
+- Stop losses: academically debated, but the UX needs them.
 
-## Khối 3 — Nâng cao (nếu dư thời gian / cho báo cáo)
-- Factor models: CAPM → Fama-French 3/5 factors → momentum factor. Giúp trả lời "alpha của ta có thật không hay chỉ là beta trá hình".
-- Market microstructure cơ bản: bid-ask spread, vì sao slippage tồn tại.
-- Văn liệu alt-data: Da, Engelberg & Gao (2011) — Google Trends dự đoán; Moat et al. — Wikipedia pageviews; Bollen et al. (2011) — Twitter mood (và các phê bình replication của nó — đọc cả hai phía!).
+## Block 3 — Advanced (if time allows / for the report)
+- Factor models: CAPM → Fama-French 3/5 factors → momentum factor. Helps answer "is our alpha real, or just beta in disguise?".
+- Basic market microstructure: bid-ask spread, why slippage exists.
+- Alt-data literature: Da, Engelberg & Gao (2011) — Google Trends predictiveness; Moat et al. — Wikipedia pageviews; Bollen et al. (2011) — Twitter mood (and its replication critiques — read both sides!).
 
-## Tài liệu gợi ý
-- **Advances in Financial Machine Learning** — Marcos López de Prado (kinh thánh về ML tài chính làm đúng; chương về cross-validation cho time series và backtest overfitting là bắt buộc).
-- **Quantitative Trading** — Ernest Chan (nhập môn thực dụng).
-- Investopedia cho khái niệm lẻ; SSRN cho papers alt-data.
+## Recommended reading
+- **Advances in Financial Machine Learning** — Marcos López de Prado (the bible of doing financial ML right; the chapters on cross-validation for time series and backtest overfitting are required reading).
+- **Quantitative Trading** — Ernest Chan (a pragmatic intro).
+- Investopedia for individual concepts; SSRN for alt-data papers.
 
-## Quy tắc văn hóa dự án
-1. Con số backtest nào không kèm mô tả phương pháp (cửa sổ, phí, universe) = không tồn tại.
-2. "Có vẻ hoạt động" không phải kết luận — IC, p-value, hoặc im lặng.
-3. Kết quả âm (agents không thêm alpha) vẫn là kết quả đồ án tốt nếu phương pháp sạch.
+## Project culture rules
+1. A backtest number without its methodology (window, costs, universe) = does not exist.
+2. "Seems to work" is not a conclusion — IC, p-value, or silence.
+3. A negative result (agents add no alpha) is still a good project result if the methodology is clean.

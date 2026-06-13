@@ -28,6 +28,8 @@ data/processed/
 data/cache/
 *.parquet
 *.duckdb
+*.duckdb.wal
+*.duckdb.tmp
 *.sqlite
 *.csv
 !**/fixtures/**/*.csv
@@ -39,6 +41,9 @@ data/cache/
 models/artifacts/
 mlruns/
 wandb/
+
+# --- Run logs ---
+*.log
 
 # --- OS / IDE ---
 .DS_Store

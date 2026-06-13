@@ -1,196 +1,198 @@
-# RevBench — Sổ quyết định (Decision Log)
+# RevBench — Decision Log
 
-> Mỗi mục là một lựa chọn còn mở hoặc đã chốt. Format: bối cảnh → các phương án → đề xuất của Claude → **trạng thái**. Khi bạn chốt, đổi trạng thái thành ✅ và ghi ngày. Các mục 🔴 cần chốt trước khi bắt đầu phase tương ứng.
+> Each entry is a still-open or already-closed choice. Format: context → options → Claude's recommendation → **status**. When you close one, change the status to ✅ with a date. 🔴 entries must be closed before the corresponding phase starts.
 
-| ID | Chủ đề | Cần trước | Trạng thái |
+| ID | Topic | Needed before | Status |
 |---|---|---|---|
-| D1 | Nguồn dữ liệu giá | Phase 1 | ✅ Chốt 2026-06-12 |
-| D2 | Storage layer | Phase 1 | ✅ Chốt 2026-06-12 |
-| D3 | LLM & chiến lược chi phí | Phase 3 | ✅ Chốt 2026-06-12 |
-| D4 | Agent framework | Phase 3 | ✅ Chốt 2026-06-12 |
-| D5 | Frontend stack | Phase 7 | 🟢 Mở (chưa gấp) |
-| D6 | Job scheduling | Phase 1 | ✅ Chốt 2026-06-12 |
-| D7 | Nguồn social/news data | Phase 1/5 | ✅ Chốt 2026-06-12 |
-| D8 | "Satellite data" — phạm vi thực tế | Phase 5 | ✅ Chốt 2026-06-12 |
-| D9 | Universe cổ phiếu & horizon dự đoán | Phase 0 | ✅ Chốt 2026-06-12 |
-| D10 | Deployment | Phase 8 | 🟢 Mở (chưa gấp) |
-| D11 | Backtesting library | Phase 2 | ✅ Chốt 2026-06-12 |
-| D12 | Ngôn ngữ tài liệu/báo cáo | Phase 0 | 🟢 Mở |
+| D1 | Price data source | Phase 1 | ✅ Closed 2026-06-12 |
+| D2 | Storage layer | Phase 1 | ✅ Closed 2026-06-12 |
+| D3 | LLM & cost strategy | Phase 3 | ✅ Closed 2026-06-12 (re-decided) |
+| D4 | Agent framework | Phase 3 | ✅ Closed 2026-06-12 |
+| D5 | Frontend stack | Phase 7 | 🟢 Open (not urgent) |
+| D6 | Job scheduling | Phase 1 | ✅ Closed 2026-06-12 |
+| D7 | Social/news data sources | Phase 1/5 | ✅ Closed 2026-06-12 |
+| D8 | "Satellite data" — realistic scope | Phase 5 | ✅ Closed 2026-06-12 |
+| D9 | Stock universe & prediction horizon | Phase 0 | ✅ Closed 2026-06-12 |
+| D10 | Deployment | Phase 8 | 🟢 Open (not urgent) |
+| D11 | Backtesting library | Phase 2 | ✅ Closed 2026-06-12 |
+| D12 | Documentation/report language | Phase 0 | ✅ Closed 2026-06-13 |
 
 ---
 
-## D1 — Nguồn dữ liệu giá (market data provider) 🔴
+## D1 — Price data source (market data provider)
 
-**Bối cảnh:** cần OHLCV daily ≥ 5 năm cho ~15 mã US, cập nhật hằng ngày. Ngân sách: ~0 €.
+**Context:** need daily OHLCV ≥ 5 years for ~15 US tickers, updated daily. Budget: ~€0.
 
-| Phương án | Ưu | Nhược |
+| Option | Pro | Con |
 |---|---|---|
-| **yfinance** (scrape Yahoo) | Miễn phí, không key, lịch sử dài, có fundamentals | Không chính thức, hay vỡ khi Yahoo đổi; không dùng được production thật |
-| **Finnhub** free tier | API chính thức, 60 calls/phút, có news + fundamentals | Lịch sử candle daily bị giới hạn ở free tier |
-| **Alpha Vantage** free | Chính thức, daily adjusted tốt | 25 requests/ngày (rất chật) |
-| **Polygon.io** free | Chất lượng cao | 5 calls/phút, delayed, lịch sử 2 năm |
-| **Stooq / Tiingo** | Tiingo free khá rộng rãi (lịch sử dài) | Tiingo cần key, giới hạn 50 symbols/giờ |
+| **yfinance** (scrapes Yahoo) | Free, no key, long history, has fundamentals | Unofficial, breaks when Yahoo changes; not for real production |
+| **Finnhub** free tier | Official API, 60 calls/min, has news + fundamentals | Daily candle history limited on the free tier |
+| **Alpha Vantage** free | Official, good daily-adjusted | 25 requests/day (very tight) |
+| **Polygon.io** free | High quality | 5 calls/min, delayed, 2 years of history |
+| **Stooq / Tiingo** | Tiingo free is fairly generous (long history) | Tiingo needs a key, 50 symbols/hour limit |
 
-**Đề xuất:** **yfinance làm nguồn chính cho dev/backtest + Tiingo hoặc Finnhub làm nguồn thứ hai để cross-check**, tất cả sau một interface `PriceProvider` để đổi nguồn không đau. Chấp nhận yfinance vỡ thỉnh thoảng vì đây là đồ án nghiên cứu.
+**Recommendation:** **yfinance as the primary dev/backtest source + Tiingo or Finnhub as a second source for cross-checks**, all behind a `PriceProvider` interface so swapping sources is painless. Accept that yfinance breaks occasionally since this is a research project.
 
-**Trạng thái:** ✅ Chốt 2026-06-12 — yfinance nguồn chính (dev/backtest), Tiingo dự phòng, tất cả sau interface `PriceProvider`.
+**Status:** ✅ Closed 2026-06-12 — yfinance primary (dev/backtest), Tiingo backup, all behind the `PriceProvider` interface.
 
 ---
 
-## D2 — Storage layer 🔴
+## D2 — Storage layer
 
-**Bối cảnh:** dữ liệu ~15 mã × 5 năm daily là *nhỏ* (vài MB). News + signals lớn hơn chút. Web app cần đọc nhanh.
+**Context:** ~15 tickers × 5 years of daily data is *small* (a few MB). News + signals are a bit larger. The web app needs fast reads.
 
-| Phương án | Ưu | Nhược |
+| Option | Pro | Con |
 |---|---|---|
-| **DuckDB + Parquet** | Zero-ops, nhanh khủng khiếp cho analytics, hoàn hảo cho backtest, file-based dễ backup | Không thiết kế cho nhiều writer đồng thời (web app ghi) |
-| **PostgreSQL (+ TimescaleDB)** | Chuẩn production, FastAPI tích hợp tốt, đa user | Phải vận hành (Docker), overkill cho data nhỏ |
-| **SQLite** | Đơn giản nhất | Analytics chậm hơn DuckDB, concurrency kém |
+| **DuckDB + Parquet** | Zero-ops, blazing fast for analytics, perfect for backtests, file-based, easy to back up | Not designed for many concurrent writers (web app writes) |
+| **PostgreSQL (+ TimescaleDB)** | Production-standard, integrates well with FastAPI, multi-user | Must be operated (Docker), overkill for small data |
+| **SQLite** | Simplest | Slower analytics than DuckDB, weaker concurrency |
 
-**Đề xuất:** **lai** — DuckDB/Parquet cho research & backtest (ml/), PostgreSQL (Docker) cho serving (signals, recommendations, users) từ Phase 6. Trước Phase 6 chỉ cần DuckDB. → Bắt đầu bằng DuckDB, thêm Postgres sau, không phải chọn ngay cả hai.
+**Recommendation:** **hybrid** — DuckDB/Parquet for research & backtests (ml/), PostgreSQL (Docker) for serving (signals, recommendations, users) from Phase 6. Before Phase 6, only DuckDB is needed. → Start with DuckDB, add Postgres later, don't pick both up front.
 
-**Trạng thái:** ✅ Chốt 2026-06-12 — DuckDB/Parquet cho research & backtest; thêm PostgreSQL cho serving từ Phase 6.
+**Status:** ✅ Closed 2026-06-12 — DuckDB/Parquet for research & backtests; add PostgreSQL for serving from Phase 6.
 
 ---
 
-## D3 — LLM & chiến lược chi phí
+## D3 — LLM & cost strategy
 
-**Lịch sử:** chốt lần 1 (2026-06-12): Claude API — Opus 4.8 reasoning + Haiku 4.5 Batch, ước tính $3–6/ngày. **Bạn mở lại cùng ngày** vì ưu tiên chi phí → chuyển **DeepSeek V4** (ra mắt 24/04/2026; giá & tính năng xác minh qua web 12/06/2026).
+**History:** first closed (2026-06-12): Claude API — Opus 4.8 reasoning + Haiku 4.5 Batch, estimated $3–6/day. **Re-opened the same day** for cost reasons → switched to **DeepSeek V4** (launched 2026-04-24; pricing & features verified on the web 2026-06-12).
 
-| Model | Input $/1M | Output $/1M | Vai trò |
+| Model | Input $/1M | Output $/1M | Role |
 |---|---|---|---|
 | `deepseek-v4-pro` | $0.435 (cache hit ~$0.004) | $0.87 | News, Fundamentals, Technical, Risk, Strategist |
-| `deepseek-v4-flash` | $0.14 (cache hit ~$0.003) | $0.28 | Bulk sentiment (hàng trăm bài/đêm) |
+| `deepseek-v4-flash` | $0.14 (cache hit ~$0.003) | $0.28 | Bulk sentiment (hundreds of articles/night) |
 
-So với Claude: input rẻ ~11×, output ~29×. Ước tính mới: **~$0.15–0.30/ngày ≈ $3–6/tháng** (cũ: $60–130/tháng).
+Versus Claude: input ~11× cheaper, output ~29×. New estimate: **~$0.15–0.30/day ≈ $3–6/month** (old: $60–130/month).
 
-Đòn bẩy chi phí phía DeepSeek:
-- **Off-peak −50%** trong 16:30–00:30 UTC — job 22:30 Paris (= 20:30/21:30 UTC) nằm gọn trong cửa sổ; thay thế vai trò Batch API của Anthropic.
-- **Prefix caching tự động** (cache hit rẻ ~97–99%) — quy tắc "system prompt đóng băng" giữ nguyên.
-- **OpenAI-compatible API**: `openai` SDK + `base_url=https://api.deepseek.com` — không SDK riêng.
-- JSON mode + function calling: structured outputs qua Pydantic validation + retry khi parse fail.
+DeepSeek-side cost levers:
+- **Off-peak −50%** in 16:30–00:30 UTC — the 22:30 Paris job (= 20:30/21:30 UTC) sits inside the window; replaces the role Anthropic's Batch API played.
+- **Automatic prefix caching** (cache hit ~97–99% cheaper) — the "frozen system prompt" rule stays.
+- **OpenAI-compatible API**: `openai` SDK + `base_url=https://api.deepseek.com` — no separate SDK.
+- JSON mode + function calling: structured outputs via Pydantic validation + retry on parse failure.
 
-Đánh đổi chấp nhận (ghi vào báo cáo đồ án):
-1. **Suy luận dưới Opus 4.8** — đo được ở Phase 4 ablation; model ID là config (xem D4) nên đổi/nâng cấp từng agent rất rẻ.
-2. **Mất server-side web search** của Anthropic → News Agent chỉ đọc DB nội bộ (RSS + GDELT — đã có từ Phase 1; giảm phụ thuộc ngoài).
-3. **Dữ liệu qua server DeepSeek (Trung Quốc)** — chỉ gửi dữ liệu công khai (giá, tin tức), không PII; chấp nhận được cho đồ án nghiên cứu.
+Accepted trade-offs (noted in the report):
+1. **Reasoning below Opus 4.8** — measurable in the Phase 4 ablation; the model ID is config (see D4) so upgrading/changing a single agent is cheap.
+2. **Loses Anthropic's server-side web search** → the News Agent reads only the internal store (RSS + GDELT — already built in Phase 1; reduces external dependency).
+3. **Data passes through DeepSeek servers (China)** — we only send public data (prices, news), no PII; acceptable for a research project.
 
-**Trạng thái:** ✅ Chốt lại 2026-06-12 (quyết định của bạn) — DeepSeek V4: `deepseek-v4-pro` reasoning + `deepseek-v4-flash` sentiment, chạy trong cửa sổ off-peak; trần ngân sách hạ còn `AGENT_DAILY_BUDGET_USD=1`.
+**Status:** ✅ Re-closed 2026-06-12 (user's decision) — DeepSeek V4: `deepseek-v4-pro` reasoning + `deepseek-v4-flash` sentiment, run in the off-peak window; budget ceiling lowered to `AGENT_DAILY_BUDGET_USD=1`.
+
+**Update 2026-06-13 — A/B Flash vs Pro for Sentiment** (`python -m agents.compare`, 10 articles, max_tokens 1024): the two models agree closely (mean |Δscore| ≈ 0.10); Pro is actually *more compressed* on strong headlines (NVDA "exploding higher": Flash +0.60 vs Pro +0.15) and 8× pricier ($0.0048 vs $0.0006). → **Keep Flash for sentiment.** Side finding: single-shot scoring is noisy run-to-run → set `temperature=0` for sentiment so it's reproducible (same article → same score, no rewriting of backtest history on re-runs).
 
 ---
 
-## D4 — Agent framework 🟡
+## D4 — Agent framework
 
-| Phương án | Ưu | Nhược |
+| Option | Pro | Con |
 |---|---|---|
-| **Anthropic SDK trực tiếp** (tool runner + structured outputs) | Không thêm dependency, kiểm soát hoàn toàn, dễ debug, prompt caching/batch dùng thẳng | Tự viết orchestration (nhưng orchestration của ta đơn giản: fan-out → gom) |
-| LangGraph / LangChain | Nhiều pattern sẵn | Trừu tượng dày, khó debug, API đổi liên tục, che mất chi tiết caching |
-| Claude Agent SDK / Managed Agents | Anthropic lo vòng lặp agent | Overkill — agent của ta chạy batch theo lịch, không cần session container |
+| **OpenAI SDK direct** (DeepSeek's compatible endpoint) | No extra dependency, full control, easy to debug, prompt caching/off-peak used directly | Write your own orchestration (but ours is simple: fan-out → gather) |
+| LangGraph / LangChain | Many ready-made patterns | Thick abstraction, hard to debug, API churns constantly, hides caching details |
+| Managed Agents / heavyweight agent frameworks | The provider runs the agent loop | Overkill — our agents run a scheduled batch, no need for session containers |
 
-**Đề xuất:** **Anthropic Python SDK trực tiếp.** Orchestration của RevBench là DAG đơn giản chạy theo lịch — một framework đồ sộ chỉ thêm rủi ro. Nếu sau này cần hội thoại đa lượt phức tạp giữa agents thì xét lại.
+**Recommendation:** **OpenAI SDK directly** (pointed at DeepSeek). RevBench's orchestration is a simple scheduled DAG — a heavy framework only adds risk. Revisit if we later need complex multi-turn conversations between agents.
 
-**Trạng thái:** ✅ Chốt 2026-06-12 — Anthropic Python SDK trực tiếp, không framework trung gian.
+**Status:** ✅ Closed 2026-06-12 — OpenAI-compatible SDK directly, no middleware framework.
 
 ---
 
 ## D5 — Frontend stack 🟢
 
-| Phương án | Ưu | Nhược |
+| Option | Pro | Con |
 |---|---|---|
-| **Next.js + Tailwind + shadcn/ui + lightweight-charts** | Đẹp, chuẩn ngành, SSR, hệ sinh thái chart tài chính tốt | Học phí nếu chưa quen React |
-| Vite + React SPA | Nhẹ hơn Next | Tự lo routing/SSR |
-| Streamlit | Dựng trong 1 ngày | Trần thẩm mỹ thấp — không đạt mục tiêu "giao diện đẹp" |
+| **Next.js + Tailwind + shadcn/ui + lightweight-charts** | Beautiful, industry-standard, SSR, good financial-chart ecosystem | Learning curve if new to React |
+| Vite + React SPA | Lighter than Next | Handle routing/SSR yourself |
+| Streamlit | Stand up in a day | Low aesthetic ceiling — won't meet the "beautiful UI" goal |
 
-**Đề xuất:** Next.js cho sản phẩm cuối; Streamlit chỉ làm UI tạm nội bộ nếu cần demo sớm. **Câu hỏi cho bạn:** bạn đã quen React/TypeScript chưa? Nếu chưa, ta cân nhắc Vite+React (đơn giản hơn Next) — vẫn đẹp được.
+**Recommendation:** Next.js for the final product; Streamlit only as an internal temporary UI if an early demo is needed. **Question for the user:** are you already comfortable with React/TypeScript? If not, we could consider Vite+React (simpler than Next) — still can look great.
 
-**Trạng thái:** 🟢 Chốt trước Phase 7 là được.
+**Status:** 🟢 Fine to close before Phase 7.
 
 ---
 
-## D6 — Job scheduling 🟡
+## D6 — Job scheduling
 
-| Phương án | Ưu | Nhược |
+| Option | Pro | Con |
 |---|---|---|
-| **APScheduler trong 1 process Python** | Đơn giản nhất, đủ cho 1 máy | Không có UI, không distributed |
-| Prefect / Dagster | Observability đẹp, retry xịn | Thêm hạ tầng phải nuôi |
-| cron / Task Scheduler (Windows) | Zero code | Khó quản lý dependency giữa jobs |
+| **APScheduler in one Python process** | Simplest, enough for one machine | No UI, not distributed |
+| Prefect / Dagster | Nice observability, solid retries | Extra infrastructure to maintain |
+| cron / Task Scheduler (Windows) | Zero code | Hard to manage dependencies between jobs |
 
-**Đề xuất:** APScheduler (kèm logging tử tế) cho toàn bộ vòng đời đồ án; Prefect chỉ khi pipeline phình to thật sự.
+**Recommendation:** APScheduler (with proper logging) for the whole project lifecycle; Prefect only if the pipeline genuinely grows.
 
-**Trạng thái:** ✅ Chốt 2026-06-12 — APScheduler trong 1 process.
+**Status:** ✅ Closed 2026-06-12 — APScheduler in one process.
 
 ---
 
-## D7 — Nguồn social/news data 🟡
+## D7 — Social/news data sources
 
-**Thực tế phũ phàng:** X (Twitter) API tier đọc được data giá $100+/tháng — kiểu "Grok đọc Twitter" **ngoài ngân sách**. Thay thế khả thi:
+**Harsh reality:** the X (Twitter) API read tier capable of pulling data costs $100+/month — the "Grok reads Twitter" idea is **out of budget**. Viable replacements:
 
-| Nguồn | Phí | Giá trị |
+| Source | Cost | Value |
 |---|---|---|
-| **Reddit API** (r/stocks, r/wallstreetbets, r/investing) | Free tier đủ dùng | Sentiment bán lẻ — chính là nơi meme-stock sentiment sống |
-| **StockTwits API** | Free public | Sentiment gắn ticker sẵn ($AAPL tags) |
-| **GDELT** | Free | Tin tức toàn cầu, độ phủ khổng lồ |
-| **RSS** (Reuters, CNBC, Yahoo Finance, SeekingAlpha) | Free | Tin chính thống |
-| NewsAPI.org | Free tier 100 req/ngày, delay 24h | Tiện nhưng giới hạn |
+| **Reddit API** (r/stocks, r/wallstreetbets, r/investing) | Free tier is enough | Retail sentiment — exactly where meme-stock sentiment lives |
+| **StockTwits API** | Free public | Ticker-tagged sentiment ($AAPL tags) |
+| **GDELT** | Free | Global news, massive coverage |
+| **RSS** (Reuters, CNBC, Yahoo Finance, SeekingAlpha) | Free | Mainstream news |
+| NewsAPI.org | Free tier 100 req/day, 24h delay | Convenient but limited |
 
-**Đề xuất:** RSS + GDELT (tin chính thống) + Reddit + StockTwits (sentiment bán lẻ). Bỏ X/Twitter, ghi rõ trong báo cáo là giới hạn ngân sách.
+**Recommendation:** RSS + GDELT (mainstream news) + Reddit + StockTwits (retail sentiment). Drop X/Twitter, state it clearly as a budget limitation in the report.
 
-**Trạng thái:** ✅ Chốt 2026-06-12 — RSS + GDELT + Reddit + StockTwits; bỏ X/Twitter (ngân sách — ghi limitation vào báo cáo).
-
----
-
-## D8 — "Satellite data" — phạm vi thực tế 🟡
-
-**Bối cảnh:** ý tưởng gốc — ảnh vệ tinh đếm xe ở bãi đỗ Walmart, Google Maps foot traffic. Thực tế: ảnh vệ tinh thương mại (Orbital Insight, RS Metrics) giá hàng nghìn $/tháng; Google Maps "Popular Times" không có API chính thức (scrape vi phạm ToS).
-
-**Proxy miễn phí có cùng tinh thần "đo hoạt động thực của doanh nghiệp":**
-
-1. **Google Trends** — search interest cho brand/sản phẩm (iPhone, Tesla Model Y…) → proxy nhu cầu tiêu dùng.
-2. **Wikipedia pageviews** — attention proxy, có nghiên cứu học thuật chứng minh tương quan với volume.
-3. **App store rankings** — proxy traction cho công ty consumer (Meta, Google apps).
-4. **Job postings count** (career pages, levels.fyi trends) — proxy tăng trưởng/thu hẹp.
-5. (Stretch) **Sentinel-2 ảnh vệ tinh miễn phí của ESA** — phân giải 10m, đủ cho nghiên cứu mức "hoạt động cảng/nhà máy" nếu muốn có yếu tố satellite thật trong báo cáo; nhưng effort lớn, để stretch goal.
-
-**Đề xuất:** 1–3 vào Phase 5; mục 5 chỉ làm nếu dư thời gian và muốn "wow factor" cho báo cáo.
-
-**Trạng thái:** ✅ Chốt 2026-06-12 — Google Trends + Wikipedia pageviews + app charts vào Phase 5; Sentinel-2 là stretch goal.
+**Status:** ✅ Closed 2026-06-12 — RSS + GDELT + Reddit + StockTwits; drop X/Twitter (budget — noted as a limitation in the report).
 
 ---
 
-## D9 — Universe & horizon dự đoán 🔴
+## D8 — "Satellite data" — realistic scope
 
-**Cần bạn chốt 3 điều:**
+**Context:** the original idea — satellite imagery counting cars in Walmart parking lots, Google Maps foot traffic. Reality: commercial satellite imagery (Orbital Insight, RS Metrics) costs thousands of $/month; Google Maps "Popular Times" has no official API (scraping violates ToS).
 
-1. **Universe:** 15 mã đề xuất ở PLAN 0.2 ổn chưa? (tiêu chí: blue-chip, có trên Revolut, thanh khoản cao, đủ đa dạng ngành). Có muốn thêm cổ phiếu châu Âu trên Revolut không? (khuyên: chưa — thêm múi giờ & nguồn data phức tạp).
-2. **Horizon:** dự đoán 1 ngày / 5 ngày / 20 ngày? **Đề xuất: 5 ngày (1 tuần giao dịch)** — đủ ngắn để backtest nhiều mẫu, đủ dài để tín hiệu news/fundamentals kịp "ngấm" và phí giao dịch không nuốt hết alpha.
-3. **Bài toán:** phân loại hướng (lên/xuống — dễ đánh giá, đề xuất) hay hồi quy mức giá (khó hơn nhiều)?
+**Free proxies with the same "measure real business activity" spirit:**
 
-**Trạng thái:** ✅ Chốt 2026-06-12 — universe 15 mã US như đề xuất (chưa thêm cổ phiếu châu Âu); horizon **5 ngày giao dịch**; bài toán **phân loại hướng** (lên/xuống).
+1. **Google Trends** — search interest for a brand/product (iPhone, Tesla Model Y…) → a proxy for consumer demand.
+2. **Wikipedia pageviews** — an attention proxy, with academic studies showing correlation with volume.
+3. **App-store rankings** — a traction proxy for consumer companies (Meta, Google apps).
+4. **Job postings count** (career pages, levels.fyi trends) — a growth/contraction proxy.
+5. (Stretch) **ESA's free Sentinel-2 imagery** — 10m resolution, enough for research-grade "port/factory activity" if we want a real satellite element in the report; but high effort, keep it a stretch goal.
+
+**Recommendation:** 1–3 in Phase 5; item 5 only if time allows and we want a "wow factor" for the report.
+
+**Status:** ✅ Closed 2026-06-12 — Google Trends + Wikipedia pageviews + app charts in Phase 5; Sentinel-2 is a stretch goal.
+
+---
+
+## D9 — Universe & prediction horizon
+
+**Needs three things settled:**
+
+1. **Universe:** are the 15 tickers proposed in PLAN 0.2 fine? (criteria: blue-chip, on Revolut, high liquidity, sector-diverse). Want to add European stocks on Revolut? (advice: not yet — adds timezone & data-source complexity).
+2. **Horizon:** predict 1 day / 5 days / 20 days? **Recommendation: 5 days (one trading week)** — short enough to backtest many samples, long enough for news/fundamentals signals to "sink in" and for transaction costs not to eat all the alpha.
+3. **Task:** direction classification (up/down — easy to evaluate, recommended) or price-level regression (much harder)?
+
+**Status:** ✅ Closed 2026-06-12 — universe of 15 US tickers as proposed (no European stocks yet); horizon **5 trading days**; task **direction classification** (up/down).
 
 ---
 
 ## D10 — Deployment 🟢
 
-Đề xuất khi đến lúc: Docker Compose chạy local/VPS rẻ (Hetzner ~5€/tháng) hoặc free tier (frontend lên Vercel, API lên Railway/Fly.io). Quyết sau Phase 6.
+Recommendation when the time comes: Docker Compose on a cheap local/VPS (Hetzner ~€5/month) or a free tier (frontend on Vercel, API on Railway/Fly.io). Decide after Phase 6.
 
 ---
 
-## D11 — Backtesting library 🟡
+## D11 — Backtesting library
 
-| Phương án | Nhận xét |
+| Option | Assessment |
 |---|---|
-| **Tự viết walk-forward harness (pandas/numpy)** | Bài toán của ta là *signal evaluation* theo lịch daily — engine tự viết ~300 dòng, hiểu 100% những gì xảy ra, là nội dung đẹp cho báo cáo đồ án |
-| vectorbt | Rất nhanh nhưng API học phí cao, bản free hạn chế |
-| backtesting.py | Gọn nhưng thiên về chiến lược kỹ thuật đơn lẻ, khó nhét ML signals đa mã |
+| **Write our own walk-forward harness (pandas/numpy)** | Our problem is *signal evaluation* on a daily schedule — a self-written engine is ~300 lines, 100% understood, and great report material |
+| vectorbt | Very fast but a steep API learning curve, the free version is limited |
+| backtesting.py | Compact but oriented to single technical strategies, hard to fit multi-ticker ML signals |
 
-**Đề xuất:** tự viết harness + dùng `quantstats` để xuất report metrics đẹp.
+**Recommendation:** write our own harness + use `quantstats` to produce nice metric reports.
 
-**Trạng thái:** ✅ Chốt 2026-06-12 — tự viết walk-forward harness + `quantstats` cho report.
+**Status:** ✅ Closed 2026-06-12 — self-written walk-forward harness + `quantstats` for reporting.
 
 ---
 
-## D12 — Ngôn ngữ tài liệu/báo cáo 🟢
+## D12 — Documentation/report language
 
-Hiện tại: docs tiếng Việt (làm việc với bạn), README + code + comments tiếng Anh. Báo cáo nộp trường (Pháp/Anh?) — bạn cho biết yêu cầu của INSA để tính việc dịch.
+**Context:** docs were initially written in Vietnamese (the user's working language), with README + code + comments in English. The final report is submitted at INSA.
 
-**Trạng thái:** 🟢 Chốt lúc nào cũng được.
+**Status:** ✅ Closed 2026-06-13 (user's decision) — **everything in English**: all `docs/` files, code, comments, and the final report. Vietnamese docs were translated to English on 2026-06-13. The user continues to communicate in Vietnamese in chat; only written artifacts are English.
