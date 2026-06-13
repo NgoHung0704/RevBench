@@ -7,7 +7,16 @@
       "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m pytest -q tests/test_features.py)",
       "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m ml.backtest --model all)",
       "PowerShell(git push)",
-      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m agents.run --task sentiment --dry-run --limit 5)"
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m agents.run --task sentiment --dry-run --limit 5)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -c \"from agents.config import AgentSettings; s = AgentSettings\\(\\); print\\('key set:', bool\\(s.deepseek_api_key\\)\\); print\\('base_url:', s.deepseek_base_url\\); from agents.store import AgentStore; st = AgentStore\\(\\); print\\('unscored news:', len\\(st.unscored_news\\(\\)\\)\\); st.close\\(\\)\")",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m agents.run --task sentiment --limit 12)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m agents.compare --limit 12 2>$null)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m agents.compare --limit 10 --max-tokens 1024 2>$null)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m pytest tests/test_agents.py -q)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m ruff check agents/)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -c \"from agents.store import AgentStore; s = AgentStore\\(\\); s.con.execute\\('DELETE FROM news_sentiment'\\); print\\('cleared; unscored now:', len\\(s.unscored_news\\(\\)\\)\\); s.close\\(\\)\")",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m pytest -q)",
+      "PowerShell(git add agents/llm.py agents/roster/sentiment.py agents/store.py agents/compare.py .claude/settings.json)"
     ]
   }
 }

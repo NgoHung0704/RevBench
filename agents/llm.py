@@ -66,12 +66,22 @@ class LLMClient:
             )
 
     def complete_json(
-        self, *, model: str, system: str, user: str, schema: type[T], max_tokens: int = 1024
+        self,
+        *,
+        model: str,
+        system: str,
+        user: str,
+        schema: type[T],
+        max_tokens: int = 1024,
+        temperature: float | None = None,
     ) -> T:
         messages = [
             {"role": "system", "content": system},
             {"role": "user", "content": user},
         ]
+        # temperature=0 -> greedy decoding -> the same article always scores the
+        # same, so re-running the agent never rewrites backtest history.
+        extra = {} if temperature is None else {"temperature": temperature}
         last_error: ValidationError | None = None
         for _attempt in range(2):
             response = self._client.chat.completions.create(
@@ -79,6 +89,7 @@ class LLMClient:
                 messages=messages,
                 max_tokens=max_tokens,
                 response_format={"type": "json_object"},
+                **extra,
             )
             self._report_usage(model, response)
             content = response.choices[0].message.content or ""

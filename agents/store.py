@@ -85,6 +85,14 @@ class AgentStore:
             query += f" LIMIT {int(limit)}"
         return self.con.execute(query).fetchdf()
 
+    def recent_news(self, limit: int = 10) -> pd.DataFrame:
+        """Most recent articles regardless of scored status (for model A/B tests)."""
+        return self.con.execute(
+            "SELECT id, ticker, title, summary FROM news"
+            " ORDER BY published_at DESC LIMIT ?",
+            [int(limit)],
+        ).fetchdf()
+
     def upsert_sentiment(self, rows: list[dict]) -> int:
         if not rows:
             return 0

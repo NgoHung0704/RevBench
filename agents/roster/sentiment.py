@@ -18,6 +18,7 @@ logger = logging.getLogger("revbench.agents.sentiment")
 
 AGENT_NAME = "sentiment"
 MAX_SUMMARY_CHARS = 1500  # cap pasted article text; titles carry most signal
+SENTIMENT_TEMPERATURE = 0.0  # deterministic scoring -> reproducible backtests
 
 
 @dataclass
@@ -57,7 +58,8 @@ def score_unscored_news(
                 system=SENTIMENT_SYSTEM,
                 user=build_user_message(row.ticker, row.title, row.summary),
                 schema=SentimentOutput,
-                max_tokens=300,
+                max_tokens=400,
+                temperature=SENTIMENT_TEMPERATURE,
             )
         except SchemaValidationError as exc:
             logger.warning("skipping %s/%s: %s", row.id, row.ticker, exc)
