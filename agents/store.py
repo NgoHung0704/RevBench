@@ -39,6 +39,18 @@ CREATE TABLE IF NOT EXISTS news_sentiment (
     ingested_at  TIMESTAMP NOT NULL,
     PRIMARY KEY (news_id, ticker)
 );
+CREATE TABLE IF NOT EXISTS agent_signals (
+    ticker       VARCHAR   NOT NULL,
+    as_of_date   DATE      NOT NULL,
+    agent        VARCHAR   NOT NULL,
+    signal       DOUBLE    NOT NULL,
+    confidence   DOUBLE    NOT NULL,
+    payload      VARCHAR   NOT NULL,  -- full agent output as JSON
+    model        VARCHAR   NOT NULL,
+    available_at TIMESTAMP NOT NULL,
+    ingested_at  TIMESTAMP NOT NULL,
+    PRIMARY KEY (ticker, as_of_date, agent)
+);
 """
 
 
@@ -93,6 +105,21 @@ class AgentStore:
             [int(limit)],
         ).fetchdf()
 
+    def scored_news_for(self, ticker: str, since_days: int = 30, limit: int = 25) -> pd.DataFrame:
+        """Recent scored headlines for one ticker, newest first (News Agent input)."""
+        return self.con.execute(
+            """
+            SELECT n.title, s.score, s.confidence, s.event_type, n.published_at
+            FROM news_sentiment s
+            JOIN news n ON n.id = s.news_id AND n.ticker = s.ticker
+            WHERE s.ticker = ?
+              AND n.published_at >= CURRENT_TIMESTAMP - INTERVAL (?) DAY
+            ORDER BY n.published_at DESC
+            LIMIT ?
+            """,
+            [ticker, int(since_days), int(limit)],
+        ).fetchdf()
+
     def upsert_sentiment(self, rows: list[dict]) -> int:
         if not rows:
             return 0
@@ -111,6 +138,30 @@ class AgentStore:
         )
         self.con.unregister("_sent_batch")
         return len(frame)
+
+    # --- agent signals (reasoning agents) ---
+
+    def upsert_signal(
+        self, ticker: str, as_of_date, agent: str, signal: float,
+        confidence: float, payload_json: str, model: str,
+    ) -> None:
+        now = _utcnow()
+        self.con.execute(
+            """
+            INSERT OR REPLACE INTO agent_signals
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            [ticker, as_of_date, agent, signal, confidence, payload_json, model, now, now],
+        )
+
+    def load_signals(self, ticker: str | None = None) -> pd.DataFrame:
+        query = "SELECT * FROM agent_signals"
+        params: list = []
+        if ticker is not None:
+            query += " WHERE ticker = ?"
+            params.append(ticker)
+        query += " ORDER BY as_of_date, ticker, agent"
+        return self.con.execute(query, params).fetchdf()
 
     def close(self) -> None:
         self.con.close()

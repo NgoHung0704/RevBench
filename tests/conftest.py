@@ -8,7 +8,7 @@ def make_frame(
 ) -> pd.DataFrame:
     """Synthetic daily bars shaped like PriceStore.load_daily output."""
     rng = np.random.default_rng(seed)
-    dates = pd.bdate_range(start, periods=n_days)
+    dates = pd.DatetimeIndex(pd.bdate_range(start, periods=n_days), name="date")
     rets = rng.normal(drift, 0.01, n_days)
     close = 100 * np.cumprod(1 + rets)
     return pd.DataFrame(

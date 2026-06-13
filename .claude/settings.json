@@ -16,7 +16,15 @@
       "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m ruff check agents/)",
       "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -c \"from agents.store import AgentStore; s = AgentStore\\(\\); s.con.execute\\('DELETE FROM news_sentiment'\\); print\\('cleared; unscored now:', len\\(s.unscored_news\\(\\)\\)\\); s.close\\(\\)\")",
       "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m pytest -q)",
-      "PowerShell(git add agents/llm.py agents/roster/sentiment.py agents/store.py agents/compare.py .claude/settings.json)"
+      "PowerShell(git add agents/llm.py agents/roster/sentiment.py agents/store.py agents/compare.py .claude/settings.json)",
+      "PowerShell(git add docs/ CLAUDE.md .gitignore)",
+      "PowerShell(git commit -F COMMIT_MSG.txt)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m pytest tests/test_context.py tests/test_orchestrator.py -q)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m ruff check agents/ tests/test_context.py tests/test_orchestrator.py)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m agents.run --task signals --tickers AAPL MSFT --dry-run 2>$null)",
+      "PowerShell(.\\\\.venv\\\\Scripts\\\\python.exe -m pytest -q 2>&1)",
+      "PowerShell(git add agents/ tests/ README.md)",
+      "PowerShell(git add .claude/settings.json)"
     ]
   }
 }
