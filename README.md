@@ -34,15 +34,19 @@
 
 ```powershell
 python -m venv .venv
-.\.venv\Scripts\python -m pip install -e ".[dev]"
+.\.venv\Scripts\python -m pip install -e ".[dev,ui]"
 .\.venv\Scripts\python -m pytest                          # unit tests (offline)
 .\.venv\Scripts\python -m data_pipeline.fetch --all --years 5   # backfill prices
 .\.venv\Scripts\python -m data_pipeline.jobs              # daily update once (prices+news+QC)
 .\.venv\Scripts\python -m data_pipeline.scheduler         # keep running daily at 22:30 Paris
-.\.venv\Scripts\python -m data_pipeline.quality           # data-quality report
+.\.venv\Scripts\python -m agents.run --task sentiment     # score news sentiment (needs key)
+.\.venv\Scripts\python -m agents.run --task signals       # run reasoning agents per ticker
+.\.venv\Scripts\streamlit run ui/streamlit_app.py         # temporary dashboard
 ```
 
-Copy `.env.example` to `.env` and fill in keys as phases require them (Anthropic key needed from Phase 3).
+The dashboard is read-only over the DuckDB store — run it when no batch job is writing.
+
+Copy `.env.example` to `.env` and fill in keys as phases require them (`DEEPSEEK_API_KEY` needed from Phase 3).
 
 ## Status
 
@@ -54,4 +58,8 @@ Copy `.env.example` to `.env` and fill in keys as phases require them (Anthropic
 
 First honest OOS result (491 days, 2024-06 → 2026-06): **nothing beats equal-weight buy & hold in this bull window** — B&H Sharpe 1.17; LightGBM v1 Sharpe 0.45 with 51.1% accuracy vs a 53.9% up-move base rate. Expected per EMH; the harness is the deliverable. Whether agent signals add alpha is exactly Phase 3–4's research question.
 
-🟡 **Phase 3 — Agent system MVP, nearly done.** Live on DeepSeek V4: Sentiment Agent (`deepseek-v4-flash`, 708 articles scored) + three reasoning agents (News / Technical / Fundamentals on `deepseek-v4-pro`) run by an orchestrator that fans out per ticker and stores `agent_signals`. Infra: JSON mode + Pydantic + one corrective retry, per-call cost accounting, `agent_usage` ledger + hard $1/day budget guard. CLI: `python -m agents.run --task {sentiment,signals} [--dry-run]`. Verified live on AAPL (news/technical/fundamentals all produce sensible, reasoned signals). Remaining: weekly AltData agent (Phase 5) + wiring agents into the scheduler. Next: **Phase 4 — signal fusion** (does the agent signal add alpha over the ML baseline?).
+🟡 **Phase 3 — Agent system MVP, nearly done.** Live on DeepSeek V4: Sentiment Agent (`deepseek-v4-flash`, 708 articles scored) + three reasoning agents (News / Technical / Fundamentals on `deepseek-v4-pro`) run by an orchestrator that fans out per ticker and stores `agent_signals`. Infra: JSON mode + Pydantic + one corrective retry, per-call cost accounting, `agent_usage` ledger + hard $1/day budget guard. CLI: `python -m agents.run --task {sentiment,signals} [--dry-run]`. Verified live on AAPL (news/technical/fundamentals all produce sensible, reasoned signals). Remaining: weekly AltData agent (Phase 5) + wiring agents into the scheduler.
+
+🟢 **Temporary dashboard (Streamlit).** `streamlit run ui/streamlit_app.py` — overview heatmap of agent signals across the universe, plus per-ticker candlestick, the agent reasoning trail (News/Technical/Fundamentals), scored news, and fundamentals. Read-only over the precomputed store; replaced by the Next.js app in Phase 7 (D5).
+
+🔜 **Phase 4 — signal fusion** (does the agent signal add alpha over the ML baseline?).

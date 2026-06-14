@@ -28,9 +28,13 @@ dev = [
     "pytest>=8.0",
     "ruff>=0.4",
 ]
+ui = [
+    "streamlit>=1.36",
+    "plotly>=5.22",
+]
 
 [tool.setuptools.packages.find]
-include = ["data_pipeline*", "ml*", "agents*"]
+include = ["data_pipeline*", "ml*", "agents*", "ui*"]
 
 [tool.ruff]
 line-length = 100
