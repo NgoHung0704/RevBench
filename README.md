@@ -37,10 +37,9 @@ python -m venv .venv
 .\.venv\Scripts\python -m pip install -e ".[dev,ui]"
 .\.venv\Scripts\python -m pytest                          # unit tests (offline)
 .\.venv\Scripts\python -m data_pipeline.fetch --all --years 5   # backfill prices
-.\.venv\Scripts\python -m data_pipeline.jobs              # daily update once (prices+news+QC)
-.\.venv\Scripts\python -m data_pipeline.scheduler         # keep running daily at 22:30 Paris
-.\.venv\Scripts\python -m agents.run --task sentiment     # score news sentiment (needs key)
-.\.venv\Scripts\python -m agents.run --task signals       # run reasoning agents per ticker
+.\.venv\Scripts\python -m data_pipeline.scheduler --once  # full pipeline once: data+agents+fusion
+.\.venv\Scripts\python -m data_pipeline.scheduler         # schedule it nightly at 22:30 Paris
+.\.venv\Scripts\python -m ml.fusion                       # recommendations only (ML+agents)
 .\.venv\Scripts\streamlit run ui/streamlit_app.py         # temporary dashboard
 ```
 
