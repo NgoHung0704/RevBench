@@ -6,7 +6,7 @@ import pytest
 from data_pipeline.altdata.trends import GoogleTrendsProvider
 from data_pipeline.altdata.wikipedia import WikipediaProvider
 from data_pipeline.store import AltDataStore
-from ml.features.altdata import _point_in_time_align, attention_feature
+from ml.features.altdata import _point_in_time_align, attention_feature, attention_on_index
 
 
 def mock_interest_df() -> pd.DataFrame:
@@ -76,6 +76,28 @@ def test_attention_feature_is_relative_to_trailing_median():
     ]
     feat = attention_feature(pd.DataFrame(rows), window=4)
     assert feat["AAPL"].iloc[-1] > 0.9  # 100 vs median ~50
+
+
+def test_attention_on_index_point_in_time():
+    # one ticker, daily values; feature available the day after each value
+    dates = pd.bdate_range("2025-01-06", periods=12)
+    rows = [
+        {"ticker": "AAPL", "date": d, "value": v,
+         "available_at": d + pd.Timedelta(days=1)}
+        for d, v in zip(dates, [50] * 6 + [100] * 6, strict=True)
+    ]
+    idx = pd.MultiIndex.from_arrays(
+        [pd.bdate_range("2025-01-06", periods=12), ["AAPL"] * 12], names=["date", "ticker"]
+    )
+    s = attention_on_index(pd.DataFrame(rows), idx, window=4)
+    # the value for day d (published d+1) cannot appear on day d itself
+    by_date = s.droplevel("ticker")
+    assert by_date.loc["2025-01-06"] != by_date.loc["2025-01-06"]  # NaN early (no median yet)
+    # a ticker not in the altdata gets all-NaN, no crash
+    idx2 = pd.MultiIndex.from_arrays(
+        [pd.bdate_range("2025-01-06", periods=3), ["ZZZZ"] * 3], names=["date", "ticker"]
+    )
+    assert attention_on_index(pd.DataFrame(rows), idx2).isna().all()
 
 
 def test_point_in_time_align_no_lookahead():

@@ -30,7 +30,7 @@
 | R10 | **GDELT free API rate-limits hard (429)** | Job fails fast and self-heals next run; acceptable for a research project |
 | R11 | **Streamlit UI needs the DB write-free** | DuckDB single-writer; run the dashboard when no batch job writes |
 | R12 | **Open decisions D5 (frontend stack) & D10 (deployment)** | Not urgent; close before Phase 7 / Phase 8 |
-| R13 | **AltData agents (Phase 5) partly built** | ✅ Wikipedia pageviews live (attention IC ≈ +0.025 over 18k samples). Reddit / StockTwits still planned. |
+| R13 | **AltData agents (Phase 5) partly built** | ✅ Wikipedia pageviews live (attention IC ≈ +0.025 over 18k samples) **and folded into the walk-forward backtest** (`ml.backtest.altdata_study`: Sharpe 0.45→0.62, indicative). Reddit / StockTwits still planned. |
 | R14 | **Google Trends free endpoint is bot-blocked (429)** | pytrends 429s on the first request (IP-level block, not rate). The `GoogleTrendsProvider` stays in the codebase (works behind a proxy / official API), but Wikipedia pageviews is the working attention source. Same pattern, swap the adapter — exactly what the provider interface is for. |
 
 ## Phase 4 specifically — review right after completion

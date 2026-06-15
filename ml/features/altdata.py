@@ -39,6 +39,39 @@ def attention_feature(altdata: pd.DataFrame, window: int = 8) -> pd.DataFrame:
     return pd.DataFrame(series).sort_index()
 
 
+def attention_on_index(
+    altdata: pd.DataFrame, index: pd.MultiIndex, window: int = 30
+) -> pd.Series:
+    """ASVI aligned to a (date, ticker) MultiIndex, point-in-time.
+
+    Each (date, ticker) gets the most recent attention value available by that
+    date (merge_asof backward) — never a value published later. Returns a Series
+    on `index` (NaN where no value is available yet); LightGBM handles the NaNs.
+    """
+    import numpy as np
+
+    panel = attention_feature(altdata, window)
+    values = np.full(len(index), np.nan)
+    if panel.empty:
+        return pd.Series(values, index=index)
+    tickers = index.get_level_values("ticker")
+    for ticker in pd.unique(tickers):
+        if ticker not in panel.columns:
+            continue
+        f = panel[ticker].dropna()
+        if f.empty:
+            continue
+        mask = np.asarray(tickers == ticker)
+        days = pd.DataFrame({"day": pd.DatetimeIndex(index[mask].get_level_values("date"))})
+        right = pd.DataFrame({"av": f.index, "v": f.to_numpy()}).sort_values("av")
+        merged = pd.merge_asof(
+            days.sort_values("day"), right,
+            left_on="day", right_on="av", direction="backward",
+        ).sort_index()  # restore the original (date, ticker) order
+        values[mask] = merged["v"].to_numpy()
+    return pd.Series(values, index=index)
+
+
 def _forward_returns(frames: dict[str, pd.DataFrame], horizon: int) -> pd.DataFrame:
     return pd.DataFrame(
         {t: f["adj_close"].shift(-horizon) / f["adj_close"] - 1.0 for t, f in frames.items()}
