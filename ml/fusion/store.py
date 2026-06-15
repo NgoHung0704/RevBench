@@ -28,6 +28,18 @@ CREATE TABLE IF NOT EXISTS recommendations (
 );
 """
 
+# Advisory enrichment (Risk + Strategist) lands in these nullable columns in a
+# second pass. ADD COLUMN IF NOT EXISTS migrates DBs created before this change.
+_ADVICE_COLUMNS = {
+    "risk_level": "VARCHAR",
+    "max_position_pct": "DOUBLE",
+    "stop_loss_pct": "DOUBLE",
+    "risk_flags": "VARCHAR",
+    "thesis": "VARCHAR",
+    "counterarguments": "VARCHAR",
+    "conviction": "VARCHAR",
+}
+
 
 class RecommendationStore:
     def __init__(self, db_path: str | Path = DEFAULT_DB_PATH):
@@ -35,18 +47,44 @@ class RecommendationStore:
         path.parent.mkdir(parents=True, exist_ok=True)
         self.con = duckdb.connect(str(path))
         self.con.execute(_SCHEMA)
+        for col, col_type in _ADVICE_COLUMNS.items():
+            self.con.execute(
+                f"ALTER TABLE recommendations ADD COLUMN IF NOT EXISTS {col} {col_type}"
+            )
 
     def upsert(self, recs: list[Recommendation]) -> int:
         now = datetime.now(UTC).replace(tzinfo=None)
         for r in recs:
             self.con.execute(
-                "INSERT OR REPLACE INTO recommendations VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                """
+                INSERT OR REPLACE INTO recommendations
+                    (ticker, as_of_date, action, score, confidence, ml_proba,
+                     components, rationale, ingested_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
                 [
                     r.ticker, r.as_of_date, r.action, r.score, r.confidence,
                     r.ml_proba, json.dumps(r.components), r.rationale, now,
                 ],
             )
         return len(recs)
+
+    def update_advice(self, ticker: str, as_of_date, risk, strat) -> None:
+        """Fill the Risk + Strategist columns on an existing recommendation row."""
+        self.con.execute(
+            """
+            UPDATE recommendations SET
+                risk_level = ?, max_position_pct = ?, stop_loss_pct = ?,
+                risk_flags = ?, thesis = ?, counterarguments = ?, conviction = ?
+            WHERE ticker = ? AND as_of_date = ?
+            """,
+            [
+                risk.risk_level, risk.max_position_pct, risk.stop_loss_pct,
+                json.dumps(risk.risk_flags), strat.thesis,
+                json.dumps(strat.counterarguments), strat.conviction,
+                ticker, as_of_date,
+            ],
+        )
 
     def load(self, ticker: str | None = None) -> pd.DataFrame:
         query = "SELECT * FROM recommendations"

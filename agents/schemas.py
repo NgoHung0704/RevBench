@@ -50,3 +50,20 @@ class NewsOutput(BaseModel):
     signal: float = Field(ge=-1, le=1)
     confidence: float = Field(ge=0, le=1)
     summary: str = Field(max_length=500)
+
+
+# --- advisory agents (run AFTER fusion, enrich the recommendation) ---
+
+
+class RiskOutput(BaseModel):
+    risk_level: Literal["low", "moderate", "high"]
+    max_position_pct: float = Field(ge=0, le=100)  # suggested cap, % of portfolio
+    stop_loss_pct: float | None = Field(default=None, ge=0, le=50)
+    risk_flags: list[str] = Field(default_factory=list, max_length=5)
+    rationale: str = Field(max_length=500)
+
+
+class StrategistOutput(BaseModel):
+    thesis: str = Field(max_length=800)  # prose for the end user
+    counterarguments: list[str] = Field(default_factory=list, max_length=4)
+    conviction: Literal["low", "medium", "high"]

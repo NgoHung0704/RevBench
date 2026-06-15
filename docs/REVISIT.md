@@ -35,6 +35,6 @@
 ## Phase 4 specifically — review right after completion
 
 - [ ] Re-read R1–R3: is the agent-alpha backtest conclusion honestly caveated everywhere it appears?
-- [ ] Risk Agent + Strategist Agent (PLAN 4.3, 4.4) — built? They enrich the recommendation but aren't backtestable features.
+- [x] Risk Agent + Strategist Agent (PLAN 4.3, 4.4) — **done 2026-06-14.** They enrich the recommendation (position sizing, stops, risk flags, prose thesis + counterarguments) but aren't backtestable features.
 - [ ] The IC number for the sentiment feature: is the sample size reported next to it every time?
 - [ ] Did the fusion logic stay deterministic (reproducible recommendations)?

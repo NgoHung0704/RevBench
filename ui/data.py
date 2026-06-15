@@ -174,7 +174,9 @@ def ticker_recommendation(db: str | Path = DEFAULT_DB_PATH, ticker: str = "") ->
             return None
         df = con.execute(
             """
-            SELECT action, score, confidence, ml_proba, rationale, as_of_date
+            SELECT action, score, confidence, ml_proba, rationale, as_of_date,
+                   risk_level, max_position_pct, stop_loss_pct, risk_flags,
+                   thesis, counterarguments, conviction
             FROM recommendations WHERE ticker = ?
             ORDER BY as_of_date DESC LIMIT 1
             """,
@@ -183,11 +185,25 @@ def ticker_recommendation(db: str | Path = DEFAULT_DB_PATH, ticker: str = "") ->
     if df.empty:
         return None
     row = df.iloc[0]
+
+    def _jsonlist(v):
+        return json.loads(v) if isinstance(v, str) and v else []
+
+    def _opt(v):
+        return None if pd.isna(v) else v
+
     return {
         "action": row["action"], "score": float(row["score"]),
         "confidence": float(row["confidence"]),
         "ml_proba": None if pd.isna(row["ml_proba"]) else float(row["ml_proba"]),
         "rationale": row["rationale"], "as_of_date": row["as_of_date"],
+        "risk_level": _opt(row["risk_level"]),
+        "max_position_pct": _opt(row["max_position_pct"]),
+        "stop_loss_pct": _opt(row["stop_loss_pct"]),
+        "risk_flags": _jsonlist(row["risk_flags"]),
+        "thesis": _opt(row["thesis"]),
+        "counterarguments": _jsonlist(row["counterarguments"]),
+        "conviction": _opt(row["conviction"]),
     }
 
 

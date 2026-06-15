@@ -22,6 +22,16 @@ NEUTRAL_FUNDAMENTALS = (
 # orchestrator call order per ticker: news -> technical -> fundamentals
 REASONING_CYCLE = [NEUTRAL_NEWS, NEUTRAL_TECHNICAL, NEUTRAL_FUNDAMENTALS]
 
+NEUTRAL_RISK = (
+    '{"risk_level": "moderate", "max_position_pct": 5, "stop_loss_pct": 8,'
+    ' "risk_flags": [], "rationale": "Canned dry-run risk view."}'
+)
+NEUTRAL_STRATEGIST = (
+    '{"thesis": "Canned dry-run thesis.", "counterarguments": [], "conviction": "low"}'
+)
+# enrichment call order per ticker: risk -> strategist
+ADVISORY_CYCLE = [NEUTRAL_RISK, NEUTRAL_STRATEGIST]
+
 
 class FakeTransport:
     """Mimics `client.chat.completions.create`; replays canned payloads."""

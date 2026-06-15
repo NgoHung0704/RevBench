@@ -4,6 +4,7 @@ from datetime import datetime
 import pytest
 from conftest import make_frame
 
+from agents.schemas import RiskOutput, StrategistOutput
 from agents.store import AgentStore
 from data_pipeline.news.base import NewsItem, item_id
 from data_pipeline.store import NewsStore, PriceStore
@@ -52,6 +53,13 @@ def populate(db):
             score=0.3, confidence=0.5, ml_proba=0.6,
             components={"ml": 0.2, "technical": 0.4}, rationale="Net bullish.",
         )])
+        rs.update_advice(
+            "AAPL", datetime(2026, 6, 11).date(),
+            RiskOutput(risk_level="moderate", max_position_pct=5.0, stop_loss_pct=8.0,
+                       risk_flags=["elevated volatility"], rationale="x"),
+            StrategistOutput(thesis="Mild bullish lean from technicals.",
+                             counterarguments=["thin ML edge"], conviction="low"),
+        )
 
 
 def test_available_tickers(tmp_path):

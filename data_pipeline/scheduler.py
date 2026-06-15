@@ -18,6 +18,7 @@ import logging
 
 from apscheduler.schedulers.blocking import BlockingScheduler
 
+from agents.advisory import enrich_recommendations
 from agents.config import AgentSettings
 from agents.guard import CostGuard
 from agents.llm import LLMClient
@@ -51,7 +52,7 @@ def _run_agents(db_path, settings: AgentSettings) -> None:
         logger.info("signals: %d tickers, $%.4f", len(sig.results), sig.cost_usd)
 
 
-def _run_fusion(db_path) -> None:
+def _run_fusion(db_path) -> list:
     """Always runs — ML-only recommendations when no agent signals exist yet."""
     with AgentStore(db_path) as store:
         recs = generate_recommendations(db_path, store, TICKERS)
@@ -59,18 +60,35 @@ def _run_fusion(db_path) -> None:
         with RecommendationStore(db_path) as rstore:
             rstore.upsert(recs)
     logger.info("fusion: %d recommendations stored", len(recs))
+    return recs
+
+
+def _run_enrichment(db_path, recs: list, settings: AgentSettings) -> None:
+    """Risk + Strategist agents enrich the recommendations (needs a key + budget)."""
+    if not recs:
+        return
+    with AgentStore(db_path) as store, RecommendationStore(db_path) as rstore:
+        guard = CostGuard(store, settings.agent_daily_budget_usd)
+        tracker = _UsageTracker(store)
+        client = LLMClient(settings=settings, on_usage=tracker)
+        n = enrich_recommendations(db_path, recs, client, rstore, guard, tracker)
+    logger.info("enrichment: %d recommendations enriched (risk + strategist)", n)
 
 
 def run_daily_pipeline(db_path=DEFAULT_DB_PATH, run_agents: bool = True) -> None:
     daily_update(db_path)
 
     settings = AgentSettings()
-    if run_agents and settings.deepseek_api_key:
+    has_key = run_agents and bool(settings.deepseek_api_key)
+    if has_key:
         _run_agents(db_path, settings)
     else:
         logger.info("agents skipped (no DEEPSEEK_API_KEY or --no-agents); fusion is ML-only")
 
-    _run_fusion(db_path)
+    recs = _run_fusion(db_path)
+
+    if has_key:
+        _run_enrichment(db_path, recs, settings)
 
 
 def main(argv: list[str] | None = None) -> int:

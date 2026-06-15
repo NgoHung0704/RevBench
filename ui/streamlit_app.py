@@ -165,7 +165,21 @@ def render_ticker(db: str, ticker: str) -> None:
             f"### {badge} &nbsp; score {rec['score']:+.2f}"
             f" · confidence {rec['confidence']:.2f}"
         )
-        st.caption(rec["rationale"])
+        # Strategist thesis replaces the template rationale when present
+        st.write(rec["thesis"] or rec["rationale"])
+        if rec["counterarguments"]:
+            with st.expander("Counterarguments"):
+                for c in rec["counterarguments"]:
+                    st.markdown(f"- {c}")
+        if rec["risk_level"]:
+            cols = st.columns(3)
+            cols[0].metric("Risk", rec["risk_level"])
+            if rec["max_position_pct"] is not None:
+                cols[1].metric("Max position", f"{rec['max_position_pct']:.0f}%")
+            if rec["stop_loss_pct"] is not None:
+                cols[2].metric("Stop", f"-{rec['stop_loss_pct']:.0f}%")
+            if rec["risk_flags"]:
+                st.caption("Risk flags: " + " · ".join(rec["risk_flags"]))
 
     render_price_chart(db, ticker)
     render_agent_insights(data.ticker_signals(db, ticker))

@@ -114,7 +114,7 @@ Rough total: ~12–16 weeks part-time (a school project), compressible if full-t
 
 **Done when:** each ticker has one `Recommendation` per day in the DB, with a backtest table that proves (or honestly disproves) the value of the agent signals.
 
-**Status (2026-06-13):** Fusion engine + `Recommendation` schema + store + CLI (`python -m ml.fusion`) done and live (15 recommendations stored, shown in the dashboard). Sentiment feature + IC machinery (`python -m ml.features.sentiment`) done and tested. **The agent-alpha verdict (4.5) is data-gated**: the IC is currently `n=0` because all news is newer than the last date with a 5-day forward return — see `docs/REVISIT.md` R1/R2. Risk Agent (4.3) + Strategist Agent (4.4) remain. The conclusive backtest awaits accumulated history from the scheduler.
+**Status (2026-06-14):** Fusion engine + `Recommendation` schema + store + CLI (`python -m ml.fusion`) done and live. **Risk Agent (4.3) + Strategist Agent (4.4) done** — they enrich each recommendation with position sizing/stops/risk flags and an honest user-facing thesis + counterarguments (run after fusion in the scheduler, shown on the dashboard). Sentiment feature + IC machinery (`python -m ml.features.sentiment`) done and tested. **The agent-alpha verdict (4.5) is the only data-gated piece left**: the IC is currently `n=0` because all news is newer than the last date with a 5-day forward return — see `docs/REVISIT.md` R1/R2. The conclusive backtest awaits accumulated history from the scheduler (now wired, R5).
 
 ---
 
