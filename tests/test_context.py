@@ -13,17 +13,21 @@ def test_technical_context_formats_and_skips_nan():
     assert "macd_hist" not in ctx  # NaN dropped
 
 
-def test_fundamentals_context_shows_period_over_period():
-    facts = pd.DataFrame(
-        {
-            "metric": ["revenue", "revenue"],
-            "period_end": [pd.Timestamp("2025-09-30"), pd.Timestamp("2025-12-31")],
-            "value": [100.0, 120.0],
-        }
-    )
-    ctx = fundamentals_context("AAPL", facts)
-    assert "revenue" in ctx
-    assert "+20.0%" in ctx  # 100 -> 120
+def test_fundamentals_context_uses_clean_quarterly_yoy():
+    rows = []
+    for pe, val in [("2024-03-31", 100), ("2024-06-30", 110), ("2024-09-30", 120),
+                    ("2024-12-31", 130), ("2025-03-31", 125)]:
+        e = pd.Timestamp(pe)
+        rows.append({"metric": "revenue", "period_start": e - pd.Timedelta(days=90),
+                     "period_end": e, "value": float(val), "filed": e + pd.Timedelta(days=20)})
+    # an annual 10-K value that, compared naively, would look like a huge spike
+    rows.append({"metric": "revenue", "period_start": pd.Timestamp("2024-01-01"),
+                 "period_end": pd.Timestamp("2024-12-31"), "value": 460.0,
+                 "filed": pd.Timestamp("2025-01-20")})
+    ctx = fundamentals_context("AAPL", pd.DataFrame(rows))
+    assert "quarterly" in ctx
+    assert "460" not in ctx  # annual value excluded -> no fake spike
+    assert "YoY +25.0%" in ctx  # 125 vs 100 four quarters earlier  # 100 -> 120
 
 
 def test_fundamentals_context_empty():

@@ -7,6 +7,8 @@ The orchestrator does the point-in-time DB loading and passes data in.
 import numpy as np
 import pandas as pd
 
+from data_pipeline.fundamentals.normalize import quarterly_series
+
 # The indicator columns we surface to the Technical Agent (a readable subset of
 # ml/features — the agent interprets, it never recomputes).
 TECH_FIELDS = [
@@ -24,24 +26,26 @@ def technical_context(ticker: str, feature_row: pd.Series, last_close: float) ->
 
 
 def fundamentals_context(ticker: str, facts: pd.DataFrame) -> str:
-    """`facts` is already point-in-time filtered (available_at <= as_of)."""
+    """`facts` is already point-in-time filtered (available_at <= as_of).
+
+    Cleans the mixed 10-Q/10-K periods into one comparable series per metric with
+    a year-over-year change (docs/REVISIT.md R4), so the agent doesn't see a
+    quarterly value next to an annual one and read it as a spike.
+    """
     if facts.empty:
         return f"Ticker: {ticker}\n(no fundamental data available as of this date)"
-    lines = [f"Ticker: {ticker}", "Recent quarterly figures (most recent last):"]
+    lines = [f"Ticker: {ticker}", "Recent figures per metric (most recent last):"]
     for metric in ("revenue", "net_income", "eps_diluted"):
-        sub = facts[facts["metric"] == metric].sort_values("period_end").tail(5)
-        if sub.empty:
+        series = quarterly_series(facts[facts["metric"] == metric]).tail(6)
+        if series.empty:
             continue
-        lines.append(f"  {metric}:")
-        prev = None
-        for row in sub.itertuples():
+        period_type = series["period_type"].iloc[0]
+        lines.append(f"  {metric} ({period_type}):")
+        for row in series.itertuples():
             period = pd.Timestamp(row.period_end).date()
-            yoy = ""
-            if prev is not None and prev != 0:
-                pct = (row.value - prev) / abs(prev) * 100
-                yoy = f" (QoQ {pct:+.1f}%)"
-            lines.append(f"    {period}: {row.value:,.0f}{yoy}")
-            prev = row.value
+            value = f"{row.value:.2f}" if metric == "eps_diluted" else f"{row.value:,.0f}"
+            yoy = f" (YoY {row.yoy:+.1%})" if pd.notna(row.yoy) else ""
+            lines.append(f"    {period}: {value}{yoy}")
     return "\n".join(lines)
 
 

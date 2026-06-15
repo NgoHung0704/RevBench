@@ -74,7 +74,11 @@ def normalize_facts(raw: dict, ticker: str) -> pd.DataFrame:
         df[col] = pd.to_datetime(df[col], errors="coerce")
     df["available_at"] = df["filed"] + pd.Timedelta(days=1)
     df["fy"] = df["fy"].astype("Int64")
-    df = df.drop_duplicates(subset=["metric", "period_end", "accn"], keep="last")
+    # include period_start: a 10-Q reports both a 3-month and a year-to-date value
+    # for the same concept (same period_end + accn), differing only in start.
+    df = df.drop_duplicates(
+        subset=["metric", "period_start", "period_end", "accn"], keep="last"
+    )
     return df.sort_values(["metric", "period_end"]).reset_index(drop=True)
 
 

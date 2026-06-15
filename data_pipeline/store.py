@@ -173,7 +173,9 @@ CREATE TABLE IF NOT EXISTS fundamentals (
     filed        DATE      NOT NULL,
     available_at TIMESTAMP NOT NULL,
     ingested_at  TIMESTAMP NOT NULL,
-    PRIMARY KEY (ticker, metric, period_end, accn)
+    -- period_start in the PK: a 10-Q reports a 3-month and a YTD value for the
+    -- same (period_end, accn), differing only in start (docs/REVISIT.md R4).
+    PRIMARY KEY (ticker, metric, period_start, period_end, accn)
 );
 """
 
