@@ -7,6 +7,8 @@ from conftest import make_frame
 from agents.store import AgentStore
 from data_pipeline.news.base import NewsItem, item_id
 from data_pipeline.store import NewsStore, PriceStore
+from ml.fusion.schema import Recommendation
+from ml.fusion.store import RecommendationStore
 from ui import data
 
 
@@ -43,6 +45,13 @@ def populate(db):
             type("U", (), {"model": "deepseek-v4-pro", "prompt_tokens": 100,
                            "completion_tokens": 50, "cached_tokens": 0, "cost_usd": 0.002})(),
         )
+
+    with RecommendationStore(db) as rs:
+        rs.upsert([Recommendation(
+            ticker="AAPL", as_of_date=datetime(2026, 6, 11).date(), action="buy",
+            score=0.3, confidence=0.5, ml_proba=0.6,
+            components={"ml": 0.2, "technical": 0.4}, rationale="Net bullish.",
+        )])
 
 
 def test_available_tickers(tmp_path):

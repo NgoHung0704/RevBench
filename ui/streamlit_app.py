@@ -37,7 +37,22 @@ def _signal_bg(value: float) -> str:
     return f"background-color: rgba({rgb},{alpha:.2f})"
 
 
+_ACTION_BADGE = {"buy": "🟢 BUY", "hold": "⚪ HOLD", "sell": "🔴 SELL"}
+
+
 def render_overview(db: str) -> None:
+    recs = data.latest_recommendations(db)
+    if not recs.empty:
+        st.subheader("Recommendations")
+        recs = recs.copy()
+        recs["action"] = recs["action"].map(_ACTION_BADGE).fillna(recs["action"])
+        st.dataframe(
+            recs[["ticker", "action", "score", "confidence", "ml_proba", "as_of_date"]],
+            width="stretch", hide_index=True,
+        )
+        st.caption("Fused ML + agent signals. **Not financial advice.** "
+                   "Whether the agent legs add alpha is data-gated (see docs/REVISIT.md).")
+
     st.subheader("Latest agent signals across the universe")
     matrix = data.latest_signal_matrix(db)
     if matrix.empty:
@@ -46,10 +61,7 @@ def render_overview(db: str) -> None:
     matrix.insert(0, "avg", matrix.mean(axis=1))
     styled = matrix.style.format("{:+.2f}", na_rep="—").map(_signal_bg)
     st.dataframe(styled, width="stretch")
-    st.caption(
-        "Raw per-agent signals in [-1, 1] (bearish → bullish over ~5 trading days). "
-        "`avg` is a naive mean — the learned fusion comes in Phase 4, not a recommendation yet."
-    )
+    st.caption("Raw per-agent signals in [-1, 1] (bearish → bullish over ~5 trading days).")
 
 
 def render_price_chart(db: str, ticker: str) -> None:
@@ -145,6 +157,15 @@ def render_ticker(db: str, ticker: str) -> None:
         c1, c2 = st.columns(2)
         c1.metric("Last close", f"${last['close']:.2f}", f"{change:+.2f}%")
         c2.metric("As of", str(prices.index[-1].date()))
+
+    rec = data.ticker_recommendation(db, ticker)
+    if rec:
+        badge = _ACTION_BADGE.get(rec["action"], rec["action"])
+        st.markdown(
+            f"### {badge} &nbsp; score {rec['score']:+.2f}"
+            f" · confidence {rec['confidence']:.2f}"
+        )
+        st.caption(rec["rationale"])
 
     render_price_chart(db, ticker)
     render_agent_insights(data.ticker_signals(db, ticker))

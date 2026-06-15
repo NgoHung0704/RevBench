@@ -148,6 +148,49 @@ def ticker_fundamentals(
     return df.groupby("metric", group_keys=False).tail(per_metric)
 
 
+def latest_recommendations(db: str | Path = DEFAULT_DB_PATH) -> pd.DataFrame:
+    """One row per ticker at its most recent as_of_date (action, score, confidence)."""
+    if not _ready(db):
+        return pd.DataFrame()
+    with _connect(db) as con:
+        if not _table_exists(con, "recommendations"):
+            return pd.DataFrame()
+        return con.execute(
+            """
+            SELECT r.ticker, r.action, r.score, r.confidence, r.ml_proba, r.as_of_date
+            FROM recommendations r
+            JOIN (SELECT ticker, MAX(as_of_date) md FROM recommendations GROUP BY ticker) l
+              ON r.ticker = l.ticker AND r.as_of_date = l.md
+            ORDER BY r.score DESC
+            """
+        ).fetchdf()
+
+
+def ticker_recommendation(db: str | Path = DEFAULT_DB_PATH, ticker: str = "") -> dict | None:
+    if not _ready(db):
+        return None
+    with _connect(db) as con:
+        if not _table_exists(con, "recommendations"):
+            return None
+        df = con.execute(
+            """
+            SELECT action, score, confidence, ml_proba, rationale, as_of_date
+            FROM recommendations WHERE ticker = ?
+            ORDER BY as_of_date DESC LIMIT 1
+            """,
+            [ticker],
+        ).fetchdf()
+    if df.empty:
+        return None
+    row = df.iloc[0]
+    return {
+        "action": row["action"], "score": float(row["score"]),
+        "confidence": float(row["confidence"]),
+        "ml_proba": None if pd.isna(row["ml_proba"]) else float(row["ml_proba"]),
+        "rationale": row["rationale"], "as_of_date": row["as_of_date"],
+    }
+
+
 def cost_summary(db: str | Path = DEFAULT_DB_PATH) -> dict:
     if not _ready(db):
         return {"today": 0.0, "total": 0.0, "calls": 0}
