@@ -13,6 +13,7 @@ from pathlib import Path
 import duckdb
 import pandas as pd
 
+from .altdata.base import AltDataPoint
 from .news.base import NewsItem
 
 DEFAULT_DB_PATH = Path("data") / "revbench.duckdb"
@@ -221,6 +222,64 @@ class FundamentalsStore:
         self.con.close()
 
     def __enter__(self) -> FundamentalsStore:
+        return self
+
+    def __exit__(self, *exc) -> None:
+        self.close()
+
+
+_ALTDATA_SCHEMA = """
+CREATE TABLE IF NOT EXISTS altdata (
+    source       VARCHAR   NOT NULL,
+    ticker       VARCHAR   NOT NULL,
+    date         DATE      NOT NULL,
+    value        DOUBLE    NOT NULL,
+    available_at TIMESTAMP NOT NULL,
+    ingested_at  TIMESTAMP NOT NULL,
+    PRIMARY KEY (source, ticker, date)
+);
+"""
+
+
+class AltDataStore:
+    """Generic alternative-data series (Google Trends, pageviews, …)."""
+
+    def __init__(self, db_path: str | Path = DEFAULT_DB_PATH):
+        path = Path(db_path)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        self.con = duckdb.connect(str(path))
+        self.con.execute(_ALTDATA_SCHEMA)
+
+    def upsert(self, points: list[AltDataPoint]) -> int:
+        if not points:
+            return 0
+        rows = pd.DataFrame([p.model_dump() for p in points])
+        rows = rows.drop_duplicates(subset=["source", "ticker", "date"], keep="last")
+        rows["ingested_at"] = datetime.now(UTC).replace(tzinfo=None)
+        self.con.register("_alt_batch", rows)
+        self.con.execute(
+            """
+            INSERT OR REPLACE INTO altdata
+            SELECT source, ticker, CAST(date AS DATE), value, available_at, ingested_at
+            FROM _alt_batch
+            """
+        )
+        self.con.unregister("_alt_batch")
+        return len(rows)
+
+    def load(self, source: str, ticker: str | None = None) -> pd.DataFrame:
+        query = "SELECT * FROM altdata WHERE source = ?"
+        params: list = [source]
+        if ticker is not None:
+            query += " AND ticker = ?"
+            params.append(ticker)
+        query += " ORDER BY ticker, date"
+        return self.con.execute(query, params).fetchdf()
+
+    def close(self) -> None:
+        self.con.close()
+
+    def __enter__(self) -> AltDataStore:
         return self
 
     def __exit__(self, *exc) -> None:

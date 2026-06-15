@@ -44,8 +44,8 @@
 
 | Source | Cost | Proxy for | Status |
 |---|---|---|---|
-| Google Trends (pytrends) | Free | Consumer demand by brand/product | ✅ |
-| Wikipedia pageviews API | Free | Investor attention (literature-backed) | ✅ |
+| Wikipedia pageviews API | Free | Investor/consumer attention (Moat et al. 2013) | ✅ **live** — official Wikimedia REST API, 5y daily history, attention IC ≈ +0.025 (n=18k) |
+| Google Trends (pytrends) | Free | Consumer demand by brand/product | ❌ bot-blocked (429 on first request); provider kept for a future proxy/official API (R14) |
 | App-store charts | Free (public) | Traction of consumer apps (META, GOOGL, …) | 🟡 |
 | Job postings (career pages) | Free but must scrape | Headcount growth | 🟡 high effort |
 | Google Maps Popular Times | No API; scraping violates ToS | Foot traffic | ❌ legal |
