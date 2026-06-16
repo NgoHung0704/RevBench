@@ -157,7 +157,8 @@ def latest_recommendations(db: str | Path = DEFAULT_DB_PATH) -> pd.DataFrame:
             return pd.DataFrame()
         return con.execute(
             """
-            SELECT r.ticker, r.action, r.score, r.confidence, r.ml_proba, r.as_of_date
+            SELECT r.ticker, r.action, r.score, r.confidence, r.ml_proba,
+                   r.components, r.as_of_date
             FROM recommendations r
             JOIN (SELECT ticker, MAX(as_of_date) md FROM recommendations GROUP BY ticker) l
               ON r.ticker = l.ticker AND r.as_of_date = l.md
@@ -174,7 +175,7 @@ def ticker_recommendation(db: str | Path = DEFAULT_DB_PATH, ticker: str = "") ->
             return None
         df = con.execute(
             """
-            SELECT action, score, confidence, ml_proba, rationale, as_of_date,
+            SELECT action, score, confidence, ml_proba, components, rationale, as_of_date,
                    risk_level, max_position_pct, stop_loss_pct, risk_flags,
                    thesis, counterarguments, conviction
             FROM recommendations WHERE ticker = ?
@@ -196,6 +197,7 @@ def ticker_recommendation(db: str | Path = DEFAULT_DB_PATH, ticker: str = "") ->
         "action": row["action"], "score": float(row["score"]),
         "confidence": float(row["confidence"]),
         "ml_proba": None if pd.isna(row["ml_proba"]) else float(row["ml_proba"]),
+        "components": json.loads(row["components"]) if row["components"] else {},
         "rationale": row["rationale"], "as_of_date": row["as_of_date"],
         "risk_level": _opt(row["risk_level"]),
         "max_position_pct": _opt(row["max_position_pct"]),
