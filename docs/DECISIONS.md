@@ -13,7 +13,7 @@
 | D7 | Social/news data sources | Phase 1/5 | ✅ Closed 2026-06-12 |
 | D8 | "Satellite data" — realistic scope | Phase 5 | ✅ Closed 2026-06-12 |
 | D9 | Stock universe & prediction horizon | Phase 0 | ✅ Closed 2026-06-12 |
-| D10 | Deployment | Phase 8 | 🟢 Open (not urgent) |
+| D10 | Deployment | Phase 8 | ✅ Closed 2026-06-16 |
 | D11 | Backtesting library | Phase 2 | ✅ Closed 2026-06-12 |
 | D12 | Documentation/report language | Phase 0 | ✅ Closed 2026-06-13 |
 
@@ -171,9 +171,9 @@ Accepted trade-offs (noted in the report):
 
 ---
 
-## D10 — Deployment 🟢
+## D10 — Deployment
 
-Recommendation when the time comes: Docker Compose on a cheap local/VPS (Hetzner ~€5/month) or a free tier (frontend on Vercel, API on Railway/Fly.io). Decide after Phase 6.
+**Status:** ✅ Closed 2026-06-16 — **Docker Compose** (`docker-compose.yml`): a `backend` service (FastAPI, mounts the DuckDB read-only) + a `frontend` service (Next.js standalone) + an optional `scheduler` service behind a profile. Self-hostable on a cheap VPS (Hetzner ~€5/month) or split (frontend on Vercel, API on Railway/Fly.io) later. DuckDB's single-writer constraint (R11) is handled by mounting the DB read-only for the API and gating the scheduler behind a profile.
 
 ---
 

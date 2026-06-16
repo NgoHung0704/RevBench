@@ -1,8 +1,11 @@
 import type { CostSummary, TickerData, TickerSummary } from "./types";
 
 // The FastAPI backend (backend/app) serves shapes identical to types.ts.
-// Set NEXT_PUBLIC_API_URL to point at a deployed API; defaults to local dev.
-const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+// Fetches run server-side (server components), so a runtime, non-public
+// API_URL works in Docker (e.g. http://backend:8000 on the compose network);
+// NEXT_PUBLIC_API_URL is the build-time fallback for static hosting.
+const BASE =
+  process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 async function get<T>(path: string): Promise<T | null> {
   try {

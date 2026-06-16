@@ -1,0 +1,50 @@
+# RevBench deployment (docs/DECISIONS.md D10).
+#
+#   docker compose up --build            # API + web against the DuckDB in ./data
+#   docker compose --profile scheduler up # also run the nightly pipeline (needs a key)
+#
+# DuckDB is single-writer across processes: the default stack mounts the DB
+# read-only for the API, so it never contends with a writer. Only enable the
+# `scheduler` profile if you want live nightly updates — and expect the API to
+# briefly fail reads while the scheduler holds the write lock (docs/REVISIT.md R11).
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      REVBENCH_DB: /data/revbench.duckdb
+      REVBENCH_CORS: http://localhost:3000
+    volumes:
+      - ./data:/data:ro
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      API_URL: http://backend:8000 # server-side fetch over the compose network
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # Optional: the nightly data -> agents -> fusion -> enrichment pipeline.
+  scheduler:
+    profiles: ["scheduler"]
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: ["python", "-m", "data_pipeline.scheduler"]
+    environment:
+      REVBENCH_DB: /data/revbench.duckdb
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      AGENT_DAILY_BUDGET_USD: ${AGENT_DAILY_BUDGET_USD:-1}
+    volumes:
+      - ./data:/data
+    restart: unless-stopped

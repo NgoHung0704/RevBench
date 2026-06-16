@@ -47,6 +47,21 @@ The dashboard is read-only over the DuckDB store — run it when no batch job is
 
 Copy `.env.example` to `.env` and fill in keys as phases require them (`DEEPSEEK_API_KEY` needed from Phase 3).
 
+### Deploy (Docker Compose)
+
+The production surface is the FastAPI backend + Next.js web app. With a populated `data/revbench.duckdb` (build it via the pipeline commands above), bring up the stack:
+
+```bash
+docker compose up --build        # API on :8000, web on :3000
+```
+
+- **backend** mounts `./data` **read-only** and serves the API; **frontend** is a Next.js standalone image that fetches the API server-side over the compose network (`API_URL=http://backend:8000`).
+- DuckDB is single-writer across processes ([R11](docs/REVISIT.md)), so the default stack is read-only. To also run the nightly `data → agents → fusion → enrichment` pipeline, set `DEEPSEEK_API_KEY` in `.env` and enable the writer profile:
+
+```bash
+docker compose --profile scheduler up   # adds the writer; expect brief API read blips while it holds the lock
+```
+
 ## Status
 
 ✅ **Phase 0 — done (2026-06-12).** Core decisions closed in [docs/DECISIONS.md](docs/DECISIONS.md); skeleton installs, tests pass, price ingestion works end-to-end (yfinance → validation → DuckDB with `available_at`).
@@ -67,4 +82,6 @@ First honest OOS result (491 days, 2024-06 → 2026-06): **nothing beats equal-w
 
 ✅ **Phase 6 — FastAPI backend.** Read-only HTTP over the DuckDB store (reuses `ui/data.py`; no LLM in the request path) serving JSON shaped exactly like the frontend types: `/api/universe`, `/api/tickers/{symbol}`, `/api/cost`. Verified live on the real DB (15 tickers; AAPL detail = 180 bars + 3 agent signals + 12 news + 18 clean quarterly fundamentals + the real strategist thesis). `python -m uvicorn backend.app.main:app`. Next: point the frontend at it (replace `mock.ts` with fetches — same shapes).
 
-🟢 **Phase 7 — web app (D5 closed).** A premium Next.js 15 + TypeScript + Tailwind + lightweight-charts frontend in [frontend/](frontend/) — dark "financial-terminal-meets-editorial" theme, Dashboard (conviction board + agent signal matrix) and per-ticker pages (candlestick, recommendation hero with the strategist thesis + counterarguments + risk sizing, agent insights, scored news, fundamentals). Runs against a typed mock-data layer matching `ui/data.py`; swap that one module for the FastAPI backend (Phase 6). `cd frontend && npm install && npm run dev`.
+✅ **Phase 7 — web app (D5 closed).** A premium Next.js 15 + TypeScript + Tailwind + lightweight-charts frontend in [frontend/](frontend/) — dark "financial-terminal-meets-editorial" theme, Dashboard (conviction board + agent signal matrix) and per-ticker pages (candlestick, recommendation hero with the strategist thesis + counterarguments + risk sizing, agent insights, scored news, fundamentals). **Wired live to the FastAPI backend** (`src/lib/api.ts`, server-side fetch, `force-dynamic`); falls back to a graceful "API unavailable" panel when the backend is down. `cd frontend && npm install && npm run dev`.
+
+✅ **Phase 8 — deployment (D10 closed, 2026-06-16).** Docker Compose stack ([docker-compose.yml](docker-compose.yml)): a `backend` image (Python 3.12, `.[api]`) mounting the DuckDB **read-only** + a `frontend` image (Next.js standalone) talking to it over the compose network, plus an opt-in `scheduler` profile for the nightly writer. Both images build clean and the stack was verified end-to-end (real data DuckDB → API → web, 15 tickers rendered, no fallback panel). See [Deploy](#deploy-docker-compose).

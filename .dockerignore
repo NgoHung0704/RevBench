@@ -1,0 +1,22 @@
+# Keep the backend build context small.
+.git
+.venv
+venv
+**/__pycache__
+**/*.pyc
+.pytest_cache
+.ruff_cache
+.mypy_cache
+data
+*.duckdb
+*.duckdb.wal
+*.duckdb.tmp
+*.log
+notebooks
+tests
+frontend
+docs
+.claude
+*.egg-info
+build
+dist

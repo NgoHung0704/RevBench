@@ -40,7 +40,7 @@ api = [
 ]
 
 [tool.setuptools.packages.find]
-include = ["data_pipeline*", "ml*", "agents*", "ui*"]
+include = ["data_pipeline*", "ml*", "agents*", "ui*", "backend*"]
 
 [tool.ruff]
 line-length = 100

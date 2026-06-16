@@ -169,7 +169,7 @@ Rough total: ~12–16 weeks part-time (a school project), compressible if full-t
 | 8.1 | Paper-trading for 2–4 weeks: record recommendations ahead of time, compare against actual outcomes |
 | 8.2 | Ablation study: ML-only vs ML+agents vs agents-only — the numbers table for the report |
 | 8.3 | Hardening: error handling, rate limits, cost guard |
-| 8.4 | Deployment `[D10]`: Docker Compose (db + api + frontend + scheduler) |
+| 8.4 | ✅ Deployment `[D10]`: Docker Compose (api + frontend + opt-in scheduler profile) — built & verified end-to-end 2026-06-16 |
 | 8.5 | Project report + demo video |
 
 ---
