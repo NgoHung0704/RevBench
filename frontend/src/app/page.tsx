@@ -1,21 +1,25 @@
 import Link from "next/link";
-import { ALL, COST } from "@/lib/mock";
+import { getCost, getUniverse } from "@/lib/api";
 import { fmtSigned, signalRGB } from "@/lib/utils";
 import { TickerCard } from "@/components/TickerCard";
 import { SignalBar } from "@/components/Meters";
+import { ApiDown } from "@/components/ApiDown";
 
-export default function Dashboard() {
-  const ranked = [...ALL].sort((a, b) => b.rec.score - a.rec.score);
-  const buys = ALL.filter((d) => d.rec.action === "buy").length;
-  const sells = ALL.filter((d) => d.rec.action === "sell").length;
-  const holds = ALL.length - buys - sells;
+export const dynamic = "force-dynamic";
+
+export default async function Dashboard() {
+  const [ranked, cost] = await Promise.all([getUniverse(), getCost()]);
+  if (!ranked) return <ApiDown />;
+
+  const buys = ranked.filter((d) => d.rec.action === "buy").length;
+  const sells = ranked.filter((d) => d.rec.action === "sell").length;
+  const holds = ranked.length - buys - sells;
   const top = ranked[0];
 
   return (
     <div className="py-8">
-      {/* Hero */}
       <section className="animate-fade-up">
-        <p className="label text-gold/70">Daily recommendations · as of 2026-06-11</p>
+        <p className="label text-gold/70">Daily recommendations · live</p>
         <h1 className="mt-3 max-w-2xl font-display text-4xl leading-[1.1] tracking-tight text-text sm:text-5xl">
           Where the <span className="italic text-gold">agents</span> and the model agree.
         </h1>
@@ -25,21 +29,21 @@ export default function Dashboard() {
         </p>
       </section>
 
-      {/* Pulse strip */}
       <section className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Buy" value={buys} accent="buy" />
         <Stat label="Hold" value={holds} accent="hold" />
         <Stat label="Sell" value={sells} accent="sell" />
-        <div className="card flex flex-col justify-center p-4">
-          <p className="label">Top conviction</p>
-          <Link href={`/ticker/${top.stock.ticker}`} className="mt-1 flex items-baseline gap-2 hover:text-gold">
-            <span className="font-mono text-lg font-semibold">{top.stock.ticker}</span>
-            <span className="tnum text-sm text-buy">{fmtSigned(top.rec.score)}</span>
-          </Link>
-        </div>
+        {top && (
+          <div className="card flex flex-col justify-center p-4">
+            <p className="label">Top conviction</p>
+            <Link href={`/ticker/${top.stock.ticker}`} className="mt-1 flex items-baseline gap-2 hover:text-gold">
+              <span className="font-mono text-lg font-semibold">{top.stock.ticker}</span>
+              <span className="tnum text-sm text-buy">{fmtSigned(top.rec.score)}</span>
+            </Link>
+          </div>
+        )}
       </section>
 
-      {/* Recommendation grid */}
       <section className="mt-10">
         <SectionTitle title="Conviction board" hint="ranked by combined signal" />
         <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -49,7 +53,6 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* Agent heatmap */}
       <section className="mt-12">
         <SectionTitle title="Agent signal matrix" hint="per-agent view across the universe" />
         <div className="card mt-4 overflow-x-auto">
@@ -90,10 +93,12 @@ export default function Dashboard() {
             </tbody>
           </table>
         </div>
-        <p className="mt-3 text-xs text-faint">
-          LLM spend today ${COST.today.toFixed(4)} · {COST.calls} calls · batch-run off-peak. The
-          agent-alpha question is still data-gated — see the project notes.
-        </p>
+        {cost && (
+          <p className="mt-3 text-xs text-faint">
+            LLM spend today ${cost.today.toFixed(4)} · {cost.calls} calls · batch-run off-peak. The
+            agent-alpha question is still data-gated — see the project notes.
+          </p>
+        )}
       </section>
     </div>
   );

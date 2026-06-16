@@ -1,21 +1,19 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { ArrowLeft, ShieldAlert } from "lucide-react";
-import { TICKERS, UNIVERSE } from "@/lib/mock";
+import { getTicker } from "@/lib/api";
 import { fmtCompact, fmtPct, fmtSigned, signalRGB } from "@/lib/utils";
 import { ActionBadge, ConvictionPill } from "@/components/Badge";
 import { ConfidenceRing, ScoreMeter } from "@/components/Meters";
 import { PriceChart } from "@/components/PriceChart";
 import { AgentInsight } from "@/components/AgentInsight";
+import { ApiDown } from "@/components/ApiDown";
 
-export function generateStaticParams() {
-  return UNIVERSE.map((s) => ({ symbol: s.ticker }));
-}
+export const dynamic = "force-dynamic";
 
 export default async function TickerPage({ params }: { params: Promise<{ symbol: string }> }) {
   const { symbol } = await params;
-  const d = TICKERS[symbol?.toUpperCase()];
-  if (!d) notFound();
+  const d = await getTicker(symbol);
+  if (!d) return <ApiDown />;
   const { rec } = d;
   const up = d.change1d >= 0;
 

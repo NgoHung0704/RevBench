@@ -78,3 +78,12 @@ export interface TickerData {
   lastClose: number;
   change1d: number;
 }
+
+// the lighter shape the /api/universe endpoint returns (dashboard list)
+export type TickerSummary = Pick<TickerData, "stock" | "rec" | "prices" | "lastClose" | "change1d">;
+
+export interface CostSummary {
+  today: number;
+  total: number;
+  calls: number;
+}

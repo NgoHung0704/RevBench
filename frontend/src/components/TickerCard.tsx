@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
-import type { TickerData } from "@/lib/types";
+import type { TickerSummary } from "@/lib/types";
 import { fmtPct, fmtSigned, signalRGB } from "@/lib/utils";
 import { ActionBadge } from "./Badge";
 import { ScoreMeter } from "./Meters";
 import { Sparkline } from "./Sparkline";
 
-export function TickerCard({ d }: { d: TickerData }) {
+export function TickerCard({ d }: { d: TickerSummary }) {
   const up = d.change1d >= 0;
   const legs: [string, number][] = [
     ["ML", d.rec.components.ml],
