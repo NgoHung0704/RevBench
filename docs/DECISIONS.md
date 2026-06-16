@@ -8,7 +8,7 @@
 | D2 | Storage layer | Phase 1 | ✅ Closed 2026-06-12 |
 | D3 | LLM & cost strategy | Phase 3 | ✅ Closed 2026-06-12 (re-decided) |
 | D4 | Agent framework | Phase 3 | ✅ Closed 2026-06-12 |
-| D5 | Frontend stack | Phase 7 | 🟢 Open (not urgent) |
+| D5 | Frontend stack | Phase 7 | ✅ Closed 2026-06-14 |
 | D6 | Job scheduling | Phase 1 | ✅ Closed 2026-06-12 |
 | D7 | Social/news data sources | Phase 1/5 | ✅ Closed 2026-06-12 |
 | D8 | "Satellite data" — realistic scope | Phase 5 | ✅ Closed 2026-06-12 |
@@ -103,9 +103,9 @@ Accepted trade-offs (noted in the report):
 | Vite + React SPA | Lighter than Next | Handle routing/SSR yourself |
 | Streamlit | Stand up in a day | Low aesthetic ceiling — won't meet the "beautiful UI" goal |
 
-**Recommendation:** Next.js for the final product; Streamlit only as an internal temporary UI if an early demo is needed. **Question for the user:** are you already comfortable with React/TypeScript? If not, we could consider Vite+React (simpler than Next) — still can look great.
+**Recommendation:** Next.js for the final product; Streamlit only as an internal temporary UI if an early demo is needed.
 
-**Status:** 🟢 Fine to close before Phase 7.
+**Status:** ✅ Closed 2026-06-14 — the user wanted the most premium frontend possible, so **Next.js 15 (App Router) + TypeScript + Tailwind + lightweight-charts** (no shadcn CLI — a hand-built design system for full control of the aesthetic). Built in `frontend/`: dark "financial-terminal-meets-editorial" theme, Dashboard + per-ticker pages, against a typed mock-data layer matching `ui/data.py` (swap for the FastAPI backend in Phase 6). Production build prerenders all 19 pages; server boots and serves 200.
 
 ---
 

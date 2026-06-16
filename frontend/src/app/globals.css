@@ -1,0 +1,78 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Ink-and-gold: a financial-terminal palette with editorial warmth. */
+  --ink: 9 11 16;
+  --surface: 16 19 27;
+  --surface-2: 22 26 36;
+  --line: 33 39 53;
+  --text: 233 236 243;
+  --muted: 151 160 177;
+  --faint: 98 107 124;
+  --gold: 214 178 122;
+  --buy: 56 201 138;
+  --sell: 244 100 110;
+  --hold: 129 140 159;
+}
+
+@layer base {
+  * {
+    border-color: rgb(var(--line));
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    background-color: rgb(var(--ink));
+    color: rgb(var(--text));
+    font-feature-settings: "ss01", "cv01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    /* faint ambient glow + grid */
+    background-image:
+      radial-gradient(60rem 40rem at 70% -10%, rgb(var(--gold) / 0.06), transparent 60%),
+      radial-gradient(50rem 40rem at 0% 0%, rgb(var(--buy) / 0.04), transparent 55%);
+    background-attachment: fixed;
+  }
+  ::selection {
+    background: rgb(var(--gold) / 0.28);
+    color: rgb(var(--text));
+  }
+  /* numbers feel intentional */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-family: var(--font-mono), monospace;
+  }
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line/80 bg-surface/70 backdrop-blur-sm;
+    box-shadow: 0 1px 0 0 rgb(255 255 255 / 0.02) inset, 0 24px 60px -40px rgb(0 0 0 / 0.8);
+  }
+  .hairline {
+    @apply border-line/70;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full border border-line/80 bg-surface-2/60 px-2.5 py-1 text-xs font-medium text-muted;
+  }
+  .label {
+    @apply text-[0.7rem] font-medium uppercase tracking-[0.14em] text-faint;
+  }
+}
+
+/* refined scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: rgb(var(--line));
+  border-radius: 999px;
+  border: 3px solid rgb(var(--ink));
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--faint));
+}
