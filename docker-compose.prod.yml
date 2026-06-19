@@ -1,0 +1,68 @@
+# RevBench production stack (docs/DECISIONS.md D10).
+#
+# Differs from docker-compose.yml (local/dev) in two security-relevant ways:
+#   1. The API port is NOT published — only the web app is reachable from the
+#      host. The frontend talks to the API over the internal compose network,
+#      so the unauthenticated read-only API never faces the public internet.
+#   2. The backend has a healthcheck and the frontend waits for it to be ready.
+#
+# Run it explicitly (it does not auto-merge with the dev file):
+#   docker compose -f docker-compose.prod.yml up -d
+# Bootstrap the DB first on a fresh host: scripts/bootstrap.sh
+#
+# DuckDB is single-writer across processes (docs/REVISIT.md R11): the API mounts
+# the DB read-only; the optional `scheduler` writer is gated behind a profile.
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    environment:
+      REVBENCH_DB: /data/revbench.duckdb
+      REVBENCH_CORS: ${PUBLIC_ORIGIN:-http://localhost:3000}
+    volumes:
+      - ./data:/data:ro
+    # No `ports:` — the API is internal-only. Reach it via the frontend.
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/api/health').status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      API_URL: http://backend:8000 # server-side fetch over the compose network
+    ports:
+      - "3000:3000"
+      # Recommended for TLS: bind locally and front with a reverse proxy
+      # (Caddy/Traefik). Replace the line above with:
+      #   - "127.0.0.1:3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # Optional nightly writer: data -> agents -> fusion -> enrichment.
+  # Enable with:  docker compose -f docker-compose.prod.yml --profile scheduler up -d
+  # Accumulates the agent-signal / news history the research conclusion needs
+  # (docs/REVISIT.md R1/R2). Expect brief API read blips while it holds the lock.
+  scheduler:
+    profiles: ["scheduler"]
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    command: ["python", "-m", "data_pipeline.scheduler"]
+    environment:
+      REVBENCH_DB: /data/revbench.duckdb
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      AGENT_DAILY_BUDGET_USD: ${AGENT_DAILY_BUDGET_USD:-1}
+      EDGAR_USER_AGENT: ${EDGAR_USER_AGENT}
+    volumes:
+      - ./data:/data
+    restart: unless-stopped

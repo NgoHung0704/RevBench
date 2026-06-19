@@ -49,18 +49,36 @@ Copy `.env.example` to `.env` and fill in keys as phases require them (`DEEPSEEK
 
 ### Deploy (Docker Compose)
 
-The production surface is the FastAPI backend + Next.js web app. With a populated `data/revbench.duckdb` (build it via the pipeline commands above), bring up the stack:
+The production surface is the FastAPI backend + Next.js web app. Two compose files:
+
+- `docker-compose.yml` — **local/dev**: publishes the API on `:8000` for debugging, web on `:3000`.
+- `docker-compose.prod.yml` — **production**: the API port is *not* published (the unauthenticated read-only API stays internal to the compose network; only the web app is reachable), the backend has a healthcheck, and the frontend waits for it to be ready.
+
+**Local quick look** (needs a populated `data/revbench.duckdb` — build it via the pipeline commands above):
 
 ```bash
 docker compose up --build        # API on :8000, web on :3000
 ```
 
-- **backend** mounts `./data` **read-only** and serves the API; **frontend** is a Next.js standalone image that fetches the API server-side over the compose network (`API_URL=http://backend:8000`).
-- DuckDB is single-writer across processes ([R11](docs/REVISIT.md)), so the default stack is read-only. To also run the nightly `data → agents → fusion → enrichment` pipeline, set `DEEPSEEK_API_KEY` in `.env` and enable the writer profile:
+**Deploy to a VPS** (Docker installed; e.g. Hetzner ~€5/mo):
 
 ```bash
-docker compose --profile scheduler up   # adds the writer; expect brief API read blips while it holds the lock
+git clone … && cd RevBench
+cp .env.example .env             # set DEEPSEEK_API_KEY + EDGAR_USER_AGENT
+bash scripts/bootstrap.sh        # builds images, backfills the DB, starts the stack
+                                 #   add --no-agents to deploy ML-only without an LLM key
 ```
+
+`bootstrap.sh` creates the DB on the host (raw data is never committed — hard rule #5) by running the backfill inside the image, then starts the read-only stack. Front the web app with a reverse proxy (Caddy/Traefik) for TLS.
+
+- **backend** mounts `./data` **read-only** and serves the API; **frontend** is a Next.js standalone image that fetches the API server-side over the compose network (`API_URL=http://backend:8000`), so CORS never gates the app and the API needs no public exposure.
+- DuckDB is single-writer across processes ([R11](docs/REVISIT.md)), so the default stack is read-only. To also run the nightly `data → agents → fusion → enrichment` pipeline — which accumulates the agent-signal / news history the research conclusion is gated on ([R1/R2](docs/REVISIT.md)) — enable the writer profile:
+
+```bash
+docker compose -f docker-compose.prod.yml --profile scheduler up -d   # writer; brief API read blips while it holds the lock
+```
+
+> Pipeline code resolves the DB path from `REVBENCH_DB` (same env the API reads), so writer and reader always agree on the mounted volume.
 
 ## Status
 

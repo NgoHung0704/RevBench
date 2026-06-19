@@ -7,6 +7,7 @@ with available_at <= t. All timestamps are stored naive-UTC.
 
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
@@ -16,7 +17,11 @@ import pandas as pd
 from .altdata.base import AltDataPoint
 from .news.base import NewsItem
 
-DEFAULT_DB_PATH = Path("data") / "revbench.duckdb"
+# Single source of truth for the DB location. REVBENCH_DB lets the deployment
+# point every reader AND writer at the mounted volume (docker-compose); unset,
+# it falls back to the repo-relative path used for local development. The API
+# resolves the same env var (backend/app/config.py), so both agree.
+DEFAULT_DB_PATH = Path(os.environ.get("REVBENCH_DB", "data/revbench.duckdb"))
 
 # Daily US bars become known at the NYSE close, 16:00 New York time.
 # We store a constant 21:00 UTC (the EDT close; 22:00 UTC in winter). Conservative
