@@ -23,20 +23,24 @@ export const convictionColor = (c: string) => CONVICTION[c] ?? CONVICTION.low;
 export const riskColor = (r: string) => RISK[r] ?? CONVICTION.low;
 
 /** Number tint by sign (lighter than base buy/sell for AA on dark). */
-export const numColor = (v: number) => (v >= 0 ? NUM_UP : NUM_DOWN);
+export const numColor = (v: number | null | undefined) =>
+  v == null ? "#818c9f" : v >= 0 ? NUM_UP : NUM_DOWN;
 
 /** Map a signed component contribution to an agent signal in [-1, 1]. */
-export const agentSig = (comp: number) => Math.max(-1, Math.min(1, comp * 3.1));
+export const agentSig = (comp: number | null | undefined) =>
+  comp == null ? 0 : Math.max(-1, Math.min(1, comp * 3.1));
 
 const MINUS = "−"; // unicode minus
+const DASH = "—"; // shown for missing (null) values — honest, not fabricated
 
-export const fmtMoney = (v: number) =>
-  "$" + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export const fmtMoney = (v: number | null | undefined) =>
+  v == null ? DASH : "$" + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 /** Signed, unicode-minus, fixed decimals. For a percentage pass a value already
  *  in percent units (e.g. 1.47 → "+1.47%"); use `pct` for fractions. */
-export const fmtSignedU = (v: number, decimals = 2, suffix = "") =>
-  (v >= 0 ? "+" : MINUS) + Math.abs(v).toFixed(decimals) + suffix;
+export const fmtSignedU = (v: number | null | undefined, decimals = 2, suffix = "") =>
+  v == null ? DASH : (v >= 0 ? "+" : MINUS) + Math.abs(v).toFixed(decimals) + suffix;
 
 /** Signed percent from a fraction (0.0147 → "+1.47%"). */
-export const fmtPctU = (frac: number, decimals = 2) => fmtSignedU(frac * 100, decimals, "%");
+export const fmtPctU = (frac: number | null | undefined, decimals = 2) =>
+  frac == null ? DASH : fmtSignedU(frac * 100, decimals, "%");

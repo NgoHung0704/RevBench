@@ -31,7 +31,7 @@ export function CountUp({
   durationMs = 650,
   className,
 }: {
-  value: number;
+  value: number | null | undefined;
   decimals?: number;
   prefix?: string;
   suffix?: string;
@@ -40,12 +40,18 @@ export function CountUp({
   className?: string;
 }) {
   const fmt = (v: number) => format(v, decimals, prefix, suffix, signed);
-  const [display, setDisplay] = useState(() => fmt(value));
+  // Missing values render an honest em-dash rather than a fabricated 0.
+  const safe = value ?? null;
+  const [display, setDisplay] = useState(() => (safe == null ? "—" : fmt(safe)));
   const reduce = useReducedMotion();
 
   useEffect(() => {
+    if (safe == null) {
+      setDisplay("—");
+      return;
+    }
     if (reduce) {
-      setDisplay(fmt(value));
+      setDisplay(fmt(safe));
       return;
     }
     let raf = 0;
@@ -54,14 +60,14 @@ export function CountUp({
       if (t0 === null) t0 = now;
       let p = Math.min((now - t0) / durationMs, 1);
       p = 1 - Math.pow(1 - p, 3); // easeOutCubic
-      setDisplay(fmt(value * p));
+      setDisplay(fmt(safe * p));
       if (p < 1) raf = requestAnimationFrame(step);
-      else setDisplay(fmt(value));
+      else setDisplay(fmt(safe));
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, reduce, durationMs, decimals, prefix, suffix, signed]);
+  }, [safe, reduce, durationMs, decimals, prefix, suffix, signed]);
 
   return <span className={className}>{display}</span>;
 }
