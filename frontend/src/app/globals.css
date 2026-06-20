@@ -3,18 +3,27 @@
 @tailwind utilities;
 
 :root {
-  /* Ink-and-gold: a financial-terminal palette with editorial warmth. */
+  /* Ink-and-gold: a financial-terminal palette with editorial warmth.
+     Space-separated RGB triplets so Tailwind can apply <alpha-value>. */
   --ink: 9 11 16;
   --surface: 16 19 27;
   --surface-2: 22 26 36;
-  --line: 33 39 53;
+  --line: 33 39 53; /* hairline borders */
+  --line-2: 26 32 48; /* fainter internal dividers */
   --text: 233 236 243;
   --muted: 151 160 177;
-  --faint: 98 107 124;
-  --gold: 214 178 122;
+  --faint: 98 107 124; /* labels */
+  --faint-2: 82 96 122; /* chart axis text */
+  --gold: 214 178 122; /* primary accent */
   --buy: 56 201 138;
   --sell: 244 100 110;
   --hold: 129 140 159;
+  --info: 111 134 201; /* calm slate-blue: counterarguments, secondary accents */
+
+  /* Motion tokens (mirror lib/motion.ts; CSS transitions read these). */
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-micro: 150ms;
+  --dur-enter: 300ms;
 }
 
 @layer base {
@@ -30,10 +39,11 @@
     font-feature-settings: "ss01", "cv01";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
-    /* faint ambient glow + grid */
+    /* ambient glow: warm gold top-right, faint green top-left, cool slate bottom */
     background-image:
-      radial-gradient(60rem 40rem at 70% -10%, rgb(var(--gold) / 0.06), transparent 60%),
-      radial-gradient(50rem 40rem at 0% 0%, rgb(var(--buy) / 0.04), transparent 55%);
+      radial-gradient(58rem 40rem at 78% -12%, rgb(var(--gold) / 0.07), transparent 60%),
+      radial-gradient(50rem 38rem at -5% -5%, rgb(var(--buy) / 0.045), transparent 55%),
+      radial-gradient(46rem 40rem at 50% 120%, rgb(var(--info) / 0.05), transparent 60%);
     background-attachment: fixed;
   }
   ::selection {
@@ -43,30 +53,45 @@
   /* numbers feel intentional */
   .tnum {
     font-variant-numeric: tabular-nums;
-    font-family: var(--font-mono), monospace;
+    font-family: var(--font-mono), ui-monospace, monospace;
+  }
+  /* Honor reduced-motion globally as a backstop to the JS guards. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.001ms !important;
+      animation-delay: 0ms !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
 @layer components {
   .card {
-    @apply rounded-2xl border border-line/80 bg-surface/70 backdrop-blur-sm;
-    box-shadow: 0 1px 0 0 rgb(255 255 255 / 0.02) inset, 0 24px 60px -40px rgb(0 0 0 / 0.8);
-  }
-  .hairline {
-    @apply border-line/70;
+    @apply rounded-2xl border border-line bg-surface/60 backdrop-blur-sm;
+    box-shadow:
+      0 1px 0 0 rgb(255 255 255 / 0.02) inset,
+      0 22px 50px -38px rgb(0 0 0 / 0.85);
   }
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-line/80 bg-surface-2/60 px-2.5 py-1 text-xs font-medium text-muted;
+    @apply inline-flex items-center gap-1.5 rounded-md border border-line bg-surface-2/60 px-2 py-1 text-xs font-medium text-muted;
   }
   .label {
-    @apply text-[0.7rem] font-medium uppercase tracking-[0.14em] text-faint;
+    @apply text-[0.66rem] font-semibold uppercase tracking-[0.12em] text-faint;
+  }
+  /* segmented control button base */
+  .seg {
+    @apply cursor-pointer rounded-lg border-none px-3 py-1.5 text-xs font-semibold;
+    transition: background var(--dur-micro) ease, color var(--dur-micro) ease;
   }
 }
 
 /* refined scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 11px;
+  height: 11px;
 }
 ::-webkit-scrollbar-thumb {
   background: rgb(var(--line));

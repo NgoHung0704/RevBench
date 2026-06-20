@@ -1,24 +1,53 @@
+"use client";
+
+import { motion, useReducedMotion } from "framer-motion";
+import { DUR, EASE } from "@/lib/motion";
 import type { Bar } from "@/lib/types";
 
-export function Sparkline({ bars, up, width = 120, height = 36 }: { bars: Bar[]; up: boolean; width?: number; height?: number }) {
-  const closes = bars.slice(-40).map((b) => b.close);
+/** Last-N closes as a stroke that draws itself in once on mount. */
+export function Sparkline({
+  bars,
+  color,
+  delay = 0,
+  count = 32,
+  height = 42,
+}: {
+  bars: Bar[];
+  color: string;
+  delay?: number;
+  count?: number;
+  height?: number;
+}) {
+  const reduce = useReducedMotion();
+  const closes = bars.slice(-count).map((b) => b.close);
+  if (closes.length < 2) return <div style={{ height }} />;
+
+  const W = 250;
+  const pad = 4;
   const min = Math.min(...closes);
   const max = Math.max(...closes);
   const span = max - min || 1;
-  const stepX = width / (closes.length - 1);
-  const pts = closes.map((c, i) => `${i * stepX},${height - ((c - min) / span) * (height - 4) - 2}`);
-  const color = up ? "rgb(var(--buy))" : "rgb(var(--sell))";
-  const id = `spark-${up ? "u" : "d"}-${Math.round(min)}`;
+  const pts = closes
+    .map((c, i) => {
+      const x = (i / (closes.length - 1)) * W;
+      const y = pad + (1 - (c - min) / span) * (height - 2 * pad);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    })
+    .join(" ");
+
   return (
-    <svg width={width} height={height} className="overflow-visible">
-      <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.25" />
-          <stop offset="100%" stopColor={color} stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polyline points={`0,${height} ${pts.join(" ")} ${width},${height}`} fill={`url(#${id})`} stroke="none" />
-      <polyline points={pts.join(" ")} fill="none" stroke={color} strokeWidth={1.5} strokeLinejoin="round" strokeLinecap="round" />
+    <svg viewBox={`0 0 ${W} ${height}`} preserveAspectRatio="none" width="100%" height={height} aria-hidden>
+      <motion.polyline
+        points={pts}
+        fill="none"
+        stroke={color}
+        strokeWidth={1.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={reduce ? false : { pathLength: 0 }}
+        animate={{ pathLength: 1 }}
+        transition={{ duration: DUR.draw + 0.15, ease: EASE, delay }}
+      />
     </svg>
   );
 }
