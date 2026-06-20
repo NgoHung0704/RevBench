@@ -15,6 +15,7 @@
 
 services:
   backend:
+    image: revbench-backend:latest
     build:
       context: .
       dockerfile: backend/Dockerfile
@@ -53,9 +54,9 @@ services:
   # (docs/REVISIT.md R1/R2). Expect brief API read blips while it holds the lock.
   scheduler:
     profiles: ["scheduler"]
-    build:
-      context: .
-      dockerfile: backend/Dockerfile
+    # Reuse the backend image (same Dockerfile) instead of building a separate,
+    # profile-gated image that `compose build` would skip and leave stale.
+    image: revbench-backend:latest
     command: ["python", "-m", "data_pipeline.scheduler"]
     environment:
       REVBENCH_DB: /data/revbench.duckdb
