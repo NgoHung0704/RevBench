@@ -1,0 +1,12 @@
+# RevBench reverse proxy.
+#
+# Now: plain HTTP on :80 (raw IP, no domain → Let's Encrypt can't issue a cert
+# for a bare IP). Reachable at http://<server-ip>.
+#
+# When you point a domain at this server, replace ":80" below with your domain
+# (e.g. revbench.example.com) and Caddy auto-provisions HTTPS on :443 — no other
+# change needed.
+:80 {
+	encode gzip
+	reverse_proxy frontend:3000
+}

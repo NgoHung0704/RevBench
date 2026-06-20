@@ -34,9 +34,9 @@ $COMPOSE run --rm scheduler python -m data_pipeline.fetch --all --years 5
 echo "==> Running the pipeline once to populate recommendations ${NO_AGENTS}"
 $COMPOSE run --rm scheduler python -m data_pipeline.scheduler --once ${NO_AGENTS}
 
-echo "==> Starting the read-only stack (API + web)"
-$COMPOSE up -d backend frontend
+echo "==> Starting the read-only stack (API + web + reverse proxy)"
+$COMPOSE up -d
 
 echo
-echo "Done. Web app on http://localhost:3000 (front it with TLS for public use)."
+echo "Done. Web app on http://<server-ip> (Caddy on :80; set a domain in ./Caddyfile for HTTPS)."
 echo "To accumulate nightly history (R1/R2):  $COMPOSE --profile scheduler up -d"

@@ -38,14 +38,28 @@ services:
       context: ./frontend
     environment:
       API_URL: http://backend:8000 # server-side fetch over the compose network
+    # Not published publicly — Caddy reaches it over the compose network and is
+    # the only public entry point. Bound to localhost only for host-side curl.
     ports:
-      - "3000:3000"
-      # Recommended for TLS: bind locally and front with a reverse proxy
-      # (Caddy/Traefik). Replace the line above with:
-      #   - "127.0.0.1:3000:3000"
+      - "127.0.0.1:3000:3000"
     depends_on:
       backend:
         condition: service_healthy
+    restart: unless-stopped
+
+  # Reverse proxy — the single public entry point. Serves the web app on :80
+  # (and :443 once a domain is configured in ./Caddyfile).
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
     restart: unless-stopped
 
   # Optional nightly writer: data -> agents -> fusion -> enrichment.
@@ -67,3 +81,7 @@ services:
     volumes:
       - ./data:/data
     restart: unless-stopped
+
+volumes:
+  caddy_data: # Caddy's TLS certs / state (persists across restarts)
+  caddy_config:
