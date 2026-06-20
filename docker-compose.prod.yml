@@ -51,6 +51,11 @@ services:
   # (and :443 once a domain is configured in ./Caddyfile).
   caddy:
     image: caddy:2-alpine
+    environment:
+      # Unset -> ":80" (HTTP). Set SITE_ADDRESS=your-domain in .env to switch on
+      # automatic HTTPS. (Default is ":80" here, not empty: Caddy treats an
+      # empty-but-set var as an invalid site address and refuses to start.)
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
     ports:
       - "80:80"
       - "443:443"

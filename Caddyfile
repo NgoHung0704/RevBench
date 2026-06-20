@@ -1,12 +1,13 @@
 # RevBench reverse proxy.
 #
-# Now: plain HTTP on :80 (raw IP, no domain → Let's Encrypt can't issue a cert
-# for a bare IP). Reachable at http://<server-ip>.
+# The site address comes from $SITE_ADDRESS (set in .env), defaulting to ":80"
+# (plain HTTP — correct for a bare IP, since Let's Encrypt can't cert an IP).
 #
-# When you point a domain at this server, replace ":80" below with your domain
-# (e.g. revbench.example.com) and Caddy auto-provisions HTTPS on :443 — no other
-# change needed.
-:80 {
+# To enable automatic HTTPS: point a domain at this server, then set
+#   SITE_ADDRESS=revbench.example.com
+# in .env and restart Caddy. Caddy provisions a Let's Encrypt cert on :443 with
+# no other change. (For a local CA / staging, set SITE_ADDRESS=https://...)
+{$SITE_ADDRESS::80} {
 	encode gzip
 	reverse_proxy frontend:3000
 }
