@@ -15,7 +15,8 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     environment:
-      REVBENCH_DB: /data/revbench.duckdb
+      # Published snapshot, not the live store (docs/REVISIT.md R11).
+      REVBENCH_DB: /data/revbench-read.duckdb
       REVBENCH_CORS: http://localhost:3000
     volumes:
       - ./data:/data:ro

@@ -29,6 +29,7 @@ from ml.fusion.fuse import generate_recommendations
 from ml.fusion.store import RecommendationStore
 
 from .jobs import daily_update
+from .publish import publish_read_replica
 from .store import DEFAULT_DB_PATH
 from .universe import TICKERS
 
@@ -89,6 +90,10 @@ def run_daily_pipeline(db_path=DEFAULT_DB_PATH, run_agents: bool = True) -> None
 
     if has_key:
         _run_enrichment(db_path, recs, settings)
+
+    # Publish the API's snapshot last, so readers only ever see a completed run
+    # and never contend with this writer for DuckDB's lock (R11).
+    publish_read_replica(db_path)
 
 
 def main(argv: list[str] | None = None) -> int:

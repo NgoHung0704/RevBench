@@ -20,7 +20,10 @@ services:
       context: .
       dockerfile: backend/Dockerfile
     environment:
-      REVBENCH_DB: /data/revbench.duckdb
+      # Reads the published snapshot, never the live store — so the API never
+      # contends with the nightly writer for DuckDB's lock (docs/REVISIT.md R11).
+      # Created by the pipeline's publish step (`python -m data_pipeline.publish`).
+      REVBENCH_DB: /data/revbench-read.duckdb
       REVBENCH_CORS: ${PUBLIC_ORIGIN:-http://localhost:3000}
     volumes:
       - ./data:/data:ro
